@@ -61,10 +61,11 @@ public class PredicatesPriority extends HttpServlet {
 
                 GetConfigProperties app = new GetConfigProperties();
                 Properties props = app.getConfig("config.properties");
-                String properties_xml = props.getProperty("priorities_xml").trim();
+                //String properties_xml = props.getProperty("priorities_xml").trim();
                 
                 XSTREAMpropertyReader xreader = new XSTREAMpropertyReader();
-                priorities = xreader.returnPriorities(properties_xml);                
+                //priorities = xreader.returnPriorities(properties_xml);   
+                priorities = xreader.returnPriorities(this.getClass().getClassLoader().getResource("properties.xml").getFile()); 
 
                 Prioritise pr = new Prioritise();
                 Map<String, List<IntPair>> prioritiesSorted = new HashMap<String, List<IntPair>>();

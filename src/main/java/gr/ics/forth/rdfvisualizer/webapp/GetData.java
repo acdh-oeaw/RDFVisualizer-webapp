@@ -7,13 +7,12 @@ package gr.ics.forth.rdfvisualizer.webapp;
 
 import gr.ics.forth.rdfvisualizer.api.core.impl.BlazeGraphManager;
 import gr.ics.forth.rdfvisualizer.api.core.impl.RDFfileManager;
-import gr.ics.forth.rdfvisualizer.api.core.impl.TripleStoreManager;
 import gr.ics.forth.rdfvisualizer.api.core.impl.TripleStoreManagerWorking;
 import gr.ics.forth.rdfvisualizer.api.core.utils.Triple;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URLEncoder;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,18 +31,23 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.Authentication;
+import org.eclipse.jetty.client.api.AuthenticationStore;
+import org.eclipse.jetty.client.util.BasicAuthentication;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.repository.RepositoryException;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.apache.commons.validator.routines.*;
 
 /**
  *
  * @author cpetrakis
  */
 public class GetData extends HttpServlet {
+
+    private BlazeGraphManager manager;
 
     /**
      * ************************ Create Json File *****************************
@@ -56,7 +60,7 @@ public class GetData extends HttpServlet {
      * @throws org.openrdf.query.MalformedQueryException
      * @throws org.openrdf.query.QueryEvaluationException
      */
-    public static JSONObject createJsonFile(Map<Triple, List<Triple>> outgoingLinks, String subjectLabel, String subjectType, String subject)
+    public JSONObject createJsonFile(Map<Triple, List<Triple>> outgoingLinks, String subjectLabel, String subjectType, String subject)
             throws RepositoryException, MalformedQueryException, QueryEvaluationException {
 
         Iterator<Map.Entry<Triple, List<Triple>>> iter = outgoingLinks.entrySet().iterator();
@@ -115,7 +119,7 @@ public class GetData extends HttpServlet {
      * @throws org.openrdf.query.QueryEvaluationException
      */
 
-    public static JSONObject createInvertJsonFile(Map<Triple, List<Triple>> outgoingLinks, String subjectLabel, String subjectType, String subject)
+    public JSONObject createInvertJsonFile(Map<Triple, List<Triple>> outgoingLinks, String subjectLabel, String subjectType, String subject)
             throws RepositoryException, MalformedQueryException, QueryEvaluationException {
 
         Iterator<Map.Entry<Triple, List<Triple>>> iter = outgoingLinks.entrySet().iterator();
@@ -177,7 +181,7 @@ public class GetData extends HttpServlet {
      * @throws org.openrdf.query.QueryEvaluationException 
      */
     
-    public static JSONObject mergeJson(JSONObject o1, JSONObject o2, String subjectLabel, String subjectType, String subject)
+    public JSONObject mergeJson(JSONObject o1, JSONObject o2, String subjectLabel, String subjectType, String subject)
             throws RepositoryException, MalformedQueryException, QueryEvaluationException {
 
         JSONObject result = new JSONObject();
@@ -224,7 +228,7 @@ public class GetData extends HttpServlet {
      * @throws org.openrdf.query.MalformedQueryException
      * @throws org.openrdf.query.QueryEvaluationException
      */
-    public static JSONObject virtuosocase(String resource) throws RepositoryException, MalformedQueryException, QueryEvaluationException {
+    public JSONObject virtuosocase(String resource) throws RepositoryException, MalformedQueryException, QueryEvaluationException {
 
         GetConfigProperties app = new GetConfigProperties();
         Properties props = app.getConfig("config.properties");
@@ -296,7 +300,8 @@ public class GetData extends HttpServlet {
      * @throws org.openrdf.query.QueryEvaluationException
      */
     
-    public static JSONObject blazegraphcase(String resource) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception {
+    public JSONObject blazegraphcase(String resource) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception {
+       
 
         String subject = resource;
 
@@ -304,14 +309,35 @@ public class GetData extends HttpServlet {
         Properties props = app.getConfig("config.properties");
 
         String blazegraph_url = props.getProperty("blazegraph_url").trim();
+        String blazegraph_user = props.getProperty("blazegraph_user").trim();
+        String blazegraph_password = props.getProperty("blazegraph_password").trim();
+        
         String label = props.getProperty("schema_label").trim();
         String pref_labels = props.getProperty("pref_labels").trim();
         BlazeGraphManager manager = new BlazeGraphManager();
 
-        HttpClient httpClient = new HttpClient();
-        httpClient.start();
-        ExecutorService executor = Executors.newCachedThreadPool();
-        manager.openConnectionToBlazegraph2(blazegraph_url, httpClient, executor);
+        if(this.manager == null) {
+            
+            HttpClient httpClient;
+            SslContextFactory sslContextFactory = new SslContextFactory(true);
+
+            httpClient = new HttpClient(sslContextFactory);
+            
+            
+            // Add authentication credentials
+            AuthenticationStore auth = httpClient.getAuthenticationStore();
+            auth.addAuthentication(new BasicAuthentication(URI.create(blazegraph_url), Authentication.ANY_REALM, blazegraph_user, blazegraph_password));
+
+            
+            httpClient.start();  
+            
+            manager.openConnectionToBlazegraph2(blazegraph_url, httpClient, Executors.newCachedThreadPool());
+        }
+ 
+
+//        ExecutorService executor = Executors.newCachedThreadPool();
+
+        //manager.openConnectionToBlazegraph(blazegraph_url);
 
         subject = subject.replaceAll(" |\\r|\\n|\"", "");
 
@@ -323,15 +349,20 @@ public class GetData extends HttpServlet {
         String subjectType = manager.returnType(subject);
 
         String[] pref_lbls = pref_labels.split(",");
+        
 
         if ((subjectLabel.isEmpty()) && (pref_lbls.length > 0)) {
             subjectLabel = manager.returnLabel(subject, pref_lbls[0]);
+        }
+        
+        if (subjectLabel.isEmpty()) {
+            subjectLabel = "no label";
         }
                 
         Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
         // Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
 
-        Set<String> labels = new TreeSet();
+        Set<String> labels = new TreeSet<String>();
 
         labels.add(label);
         if (pref_lbls[0].length() > 0) {
@@ -343,11 +374,6 @@ public class GetData extends HttpServlet {
         outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels); 
 
         JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject);
-
-        executor.shutdownNow();
-        httpClient.stop();
-        httpClient.destroy();
-        manager.repom.close();
 
         return result;
     }
@@ -365,7 +391,7 @@ public class GetData extends HttpServlet {
      * @throws Exception
      */
     
-    public static JSONObject filecase(String resource, String filename) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception {
+    public JSONObject filecase(String resource, String filename) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception {
 
         GetConfigProperties app = new GetConfigProperties();
         Properties props = app.getConfig("config.properties");
