@@ -47,7 +47,7 @@ import org.json.JSONObject;
  */
 public class GetData extends HttpServlet {
 
-    private BlazeGraphManager manager;
+    private static BlazeGraphManager _manager;
 
     /**
      * ************************ Create Json File *****************************
@@ -314,9 +314,9 @@ public class GetData extends HttpServlet {
         
         String label = props.getProperty("schema_label").trim();
         String pref_labels = props.getProperty("pref_labels").trim();
-        BlazeGraphManager manager = new BlazeGraphManager();
 
-        if(this.manager == null) {
+
+        if(_manager == null) {
             
             HttpClient httpClient;
             SslContextFactory sslContextFactory = new SslContextFactory(true);
@@ -331,7 +331,9 @@ public class GetData extends HttpServlet {
             
             httpClient.start();  
             
-            manager.openConnectionToBlazegraph2(blazegraph_url, httpClient, Executors.newCachedThreadPool());
+            _manager = new BlazeGraphManager();
+            
+            _manager.openConnectionToBlazegraph2(blazegraph_url, httpClient, Executors.newCachedThreadPool());
         }
  
 
@@ -345,14 +347,14 @@ public class GetData extends HttpServlet {
             subject = subject.substring(0, 500);
         }
 
-        String subjectLabel = manager.returnLabel(subject, label);
-        String subjectType = manager.returnType(subject);
+        String subjectLabel = _manager.returnLabel(subject, label);
+        String subjectType = _manager.returnType(subject);
 
         String[] pref_lbls = pref_labels.split(",");
         
 
         if ((subjectLabel.isEmpty()) && (pref_lbls.length > 0)) {
-            subjectLabel = manager.returnLabel(subject, pref_lbls[0]);
+            subjectLabel = _manager.returnLabel(subject, pref_lbls[0]);
         }
         
         if (subjectLabel.isEmpty()) {
@@ -371,7 +373,7 @@ public class GetData extends HttpServlet {
             }
         }
 
-        outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels); 
+        outgoingLinks = _manager.returnOutgoingLinksWithTypes(subject, labels); 
 
         JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject);
 

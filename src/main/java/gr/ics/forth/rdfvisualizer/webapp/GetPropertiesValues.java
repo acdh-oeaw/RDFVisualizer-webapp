@@ -50,6 +50,7 @@ public class GetPropertiesValues extends HttpServlet {
             result.put("schema_Label_uri", props.getProperty("schema_Label_uri").trim());
             result.put("image_type_uri", props.getProperty("image_type_uri").trim());
             result.put("tree_depth", props.getProperty("tree_depth").trim());
+            result.put("metaphacts_url", props.getProperty("metaphacts_url").trim());
                      
             out.println(result);
         }

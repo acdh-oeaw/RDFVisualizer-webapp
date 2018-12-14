@@ -23,6 +23,7 @@ var type_Label_uri  = "";
 var schema_Label_uri= "";
 var image_type_uri  = "";
 var tree_depth      = "";
+var metaphacts_url  = "";
 
 /*************** Get Configuration properties from config.properties file ******/
 
@@ -35,7 +36,8 @@ $.post("GetPropertiesValues", {
         type_Label_uri  = json.type_Label_uri;
         schema_Label_uri= json.schema_Label_uri;
         image_type_uri  = json.image_type_uri;  
-        tree_depth      = json.tree_depth;       
+        tree_depth      = json.tree_depth;
+        metaphacts_url  = json.metaphacts_url;
     });
 
 /*********************** Get Subject Uri from link****************************/
@@ -1511,8 +1513,9 @@ function rightClickMenu(value) {
                 id = $(value).parent('li').attr('id');
             }
 
-            if (selectedMenu.text() === "Open Uri in new tab") {               
-                window.open(id);
+            if (selectedMenu.text() === "Open Uri in metaphacts") {               
+                //window.open(metaphacts_url + "?uri=" + encodeURI(id));
+                window.parent.location = metaphacts_url + "?uri=" + encodeURI(id);
             }
             else if (selectedMenu.text() === "Copy Uri") {
                 var aux = document.createElement("input");
