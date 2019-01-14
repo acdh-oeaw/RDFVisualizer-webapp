@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>gr.ics.forth</groupId>
     <artifactId>RDFVisualizer</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2</version>
     <packaging>war</packaging>
     <name>RDFVisualizer</name>
     <properties>
@@ -95,12 +95,12 @@
             <artifactId>json</artifactId>
             <version>20140107</version>
             <type>jar</type>
-        </dependency>
+        </dependency>  
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>1.5</version>
-        </dependency>
+        </dependency>   
         <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-web-api</artifactId>
@@ -173,29 +173,30 @@
             <version>1.4.0</version>
         </dependency>
         <dependency>
-        	<groupId>at.ac.oeaw.acdh</groupId>
-        	<artifactId>RDFVisualizer-api</artifactId>
-        	<version>1.2</version>
-        </dependency>
-        <dependency>
         	<groupId>org.eclipse.jetty</groupId>
         	<artifactId>jetty-client</artifactId>
-        	<version>9.4.14.v20181114</version>
+        	<version>[9.4,)</version>
         </dependency>
         <dependency>
         	<groupId>org.eclipse.jetty</groupId>
         	<artifactId>jetty-util</artifactId>
-        	<version>9.4.14.v20181114</version>
+        	<version>[9.4,)</version>
         </dependency>
         <dependency>
         	<groupId>org.eclipse.jetty</groupId>
         	<artifactId>jetty-io</artifactId>
-        	<version>9.4.14.v20181114</version>
+        	<version>[9.4,)</version>
         </dependency>
         <dependency>
         	<groupId>org.eclipse.jetty</groupId>
         	<artifactId>jetty-http</artifactId>
-        	<version>9.4.14.v20181114</version>
+        	<version>[9.4,)</version>
+        </dependency>
+                <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.4.3</version>
+            <type>jar</type>
         </dependency>
     </dependencies>
 </project>

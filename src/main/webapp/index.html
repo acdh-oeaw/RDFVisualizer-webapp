@@ -20,94 +20,6 @@
     <body class="hold-transition skin-blue sidebar-mini sidebar-collapse">
 
         <div class="wrapper">
-            <header class="main-header">
-                <!-- Logo -->
-                <a href="#" class="logo">
-                    <!-- mini logo for sidebar mini 50x50 pixels -->
-                    <span class="logo-mini"><b></b></span>
-                    <!-- logo for regular state and mobile devices -->
-                    <span class="logo-lg"><b><!--RDF--></b><!-- Visualizer--></span>
-                </a>
-                <!-- Header Navbar: style can be found in header.less -->
-                <nav class="navbar navbar-static-top">                  
-                    <!-- Sidebar toggle button-->
-                    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
-                        <span class="sr-only">Toggle navigation</span>
-                    </a>
-                    <h3 class='header' style='margin-bottom: 0px; margin-top: 12px; color:#f7f1f1; margin-left: 40%'><img alt="#" style='padding-right: 30px;' src='img/Title-iconl.png'>RDF Visualizer</h3>
-                    <!--    <div class="navbar-custom-menu">
-                            <ul class="nav navbar-nav">
-                                <li>
-                                    <a href="http://www.ics.forth.gr/isl" target="_blank" class="dropdown-toggle" >
-                                        <span>ICS/ISL - FORTH</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>   -->                                     
-                </nav>                
-            </header>
-            <!-- Left side column. contains the logo and sidebar -->
-            <aside class="main-sidebar">
-                <!-- sidebar: style can be found in sidebar.less -->
-                <section class="sidebar">                  
-                    <ul class="sidebar-menu">
-                        <li class="header">MAIN NAVIGATION</li>                                                                                            
-                        <li id="nav_home"  class="active">
-                            <div class="" onclick='ShowHome()'>
-                                <i class="fa fa-home"></i> <span>Home</span>
-                            </div>
-                        </li>
-                        <li id="nav_configuration">
-                            <!--    <div class="" onclick='ShowConfiguration()' > -->
-                            <div class="">
-                                <i class="fa fa-cog"></i>  <span>Configuration</span>
-                            </div>
-                        </li>
-                        <li class="treeview">
-                            <a href="#">                                
-                                <i class="material-icons">&#xe40a;</i> <span>Symbol & color Legend</span>
-                                <span class="pull-right">
-                                    <i class="fa fa-angle-left "></i>
-                                </span>
-                            </a>
-                            <ul class="treeview-menu">
-                                <li><div><i><img alt="#" style="padding-right: 5px; padding-bottom: 3px;" src="img/Other-Entities.png"></i>  Other Entities</div></li>
-                                <li><div><i><img alt="#" style="padding-right: 5px; padding-bottom: 3px;" src="img/E12_Production.png"></i>  Temporal Entities</div></li>
-                                <li><div><i><img alt="#" style="padding-right: 5px; padding-bottom: 3px;" src="img/E39_Actor.png"></i>  Actors</div></li>                                
-                                <li><div><i><img alt="#" style="padding-right: 5px; padding-bottom: 3px;" src="img/E22_Man-Made_Object.png"></i>  Physical Things</div></li>
-                                <li><div><i><img alt="#" style="padding-right: 5px; padding-bottom: 3px;" src="img/E34_Inscription.png"></i>  Conceptual things</div></li>
-                                <li><div><i><img alt="#" style="padding-right: 5px; padding-bottom: 3px;" src="img/E53_Place.png"></i>  Places</div></li>                                
-                            </ul>
-                        </li>                                                                                                
-                                                                                                                                
-                        <li class="treeview">
-                            <a><i class="fa fa-question-circle "></i>
-                                <span>Help</span>
-                                <span class="pull-right">
-                                    <i class="fa fa-angle-left "></i>
-                                </span>
-                            </a>
-                            <ul class="treeview-menu">
-                                <li>
-                                    <div><a style='color:#ffffff' target='_blank' href="Readme.pdf"><i  class="fa fa fa-file-pdf-o"></i>
-                                            <span style='margin:10px'> Manual</span>
-                                        </a>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div><a style='color:#ffffff' target='_blank' href="http://www.cidoc-crm.org/sites/default/files/RDF%20visualiser.pdf"><i class="fa fa fa-file-pdf-o"></i>
-                                            <span style='margin:10px'> Guide</span>
-                                        </a>
-                                    </div>
-                                </li>                             
-                            </ul>                                                    
-                        </li>
-                        <li><a target='_blank' href="https://github.com/cpetrakis/RDFVisualizer-webapp"><i class="fa fa-info-circle "></i> <span>About</span></a></li> 
-                        <!-- <li><a><i class="fa fa-info-circle "></i> <span>About</span></a></li> 
-                    </ul>
-                </section>
-                <!-- /.sidebar -->
-            </aside>
             <!-- ***************************   MODALS   **************************************-->  
             <!--    ********************* TEXT *********************  -->
             <div  class="modal fade" id="text_Modal" role="dialog">
@@ -321,6 +233,7 @@
                                                     <!--    <input style='margin-bottom: 4px;' class='btn btn-default'  type="button" id="SubmitBtn" value='Submit'/>          -->
                                                 </form>
                                                 <div class="configuration" style='display:none; padding:5px;'>
+                                                
                                                     <i class="material-icons">&#xe869;</i>
                                                     <span>Choose a Template: </span>
                                                     <span  style="margin: 0px 20px 0px 20px;">
@@ -535,10 +448,7 @@
                         </div>
                     </section>            
                 </div>  
-            </div>   
-          <footer  style=" border-top:none; color:#ffffff; background-color: #222d32;" class="main-footer">               
-                  <strong>System version 1.1-SNAPSHOT <a target="_blank" style="color:#ffffff" href="changes.html">(2018-07-04T115:40)</a></strong>
-            </footer>           
+            </div>          
         </div><!-- ./wrapper -->
         <!-- TEMPLATE JAVASCRIPT LIBRARIES -->
         <script src="plugins/jQuery/jQuery-2.1.4.min.js"></script> <!-- jQuery 2.1.4 -->
