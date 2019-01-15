@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,152 +41,148 @@ public abstract class AbstractRDFManager implements Closeable{
     
     public abstract List<BindingSet> query(String sparqlQuery) throws RepositoryException, Exception;
     
-    public String selectAll()
-    {
-        String queryString = "Select * where {?s ?p ?o}";
+    public String selectAll(){
         
-        return queryString;
+        return "Select * where {?s ?p ?o}";
+    
     }
     
     
-    public String selectAll(List<String> namedgraphs)
-    {
-        String fromClauses = "";
+    public String selectAll(List<String> namedgraphs){
         
-        for (String namedgraph : namedgraphs)
-            fromClauses+="FROM <"+namedgraph+">\n";
-            
-        String queryString = "Select * \n"+fromClauses+"WHERE {?s ?p ?o}";
+        return String.format(
+                "Select * \n %s WHERE {?s ?p ?o}",
+                namedgraphs.stream().collect(Collectors.joining(">\nFROM <", "FROM <", ">"))
+            );
         
-        return queryString;
     }
     
-    public String selectAll(Resource resource)
-    {
-        String queryString = "Select * where {<"+resource.getURI().toString()+"> ?p ?o}";
+    public String selectAll(Resource resource){
         
-        return queryString;
+        return String.format(
+                "Select * where {<%s> ?p ?o}",
+                resource.getURI().toString()               
+            );
+        
     }
     
-    public String selectAll(Resource resource,List<String> namedgraphs)
-    {
-        String fromClauses = "";
+    public String selectAll(Resource resource,List<String> namedgraphs){
         
-        for (String namedgraph : namedgraphs)
-            fromClauses+="FROM <"+namedgraph+">\n";
-            
-        String queryString = "Select * \n"+fromClauses+"WHERE {<"+resource.getURI().toString()+"> ?p ?o}";
-        
-        return queryString;
+        return String.format(
+                "Select * \n%1$sWHERE {<%2$s> ?p ?o}",
+                namedgraphs.stream().collect(Collectors.joining(">\nFROM <", "FROM <", ">")),
+                resource.getURI().toString()
+            );
     }
     
-    public String selectAll(String resource)
-    {
-        String queryString = "Select * where {<"+resource+"> ?p ?o}";
+    public String selectAll(String resource){
         
-        return queryString;
+        return String.format(
+                "Select * where {<%s> ?p ?o}",
+                resource
+            );
     }
     
-    public String selectAll(String resource,List<String> namedgraphs)
-    {
-        String fromClauses = "";
+    public String selectAll(String resource,List<String> namedgraphs){
         
-        for (String namedgraph : namedgraphs)
-            fromClauses+="FROM <"+namedgraph+">\n";
-            
-        String queryString = "Select * \n"+fromClauses+"WHERE {<"+resource+"> ?p ?o}";
-        
-        return queryString;
+        return String.format(
+                "Select * \n%1$sWHERE {<%2$s> ?p ?o}",
+                namedgraphs.stream().collect(Collectors.joining(">\nFROM <", "FROM <", ">")),
+                resource
+            );
     }
     
-    public String selectLabels(String resource, String labelProperty)
-    {
-        String queryString = "Select ?label where {<"+resource+"> <"+labelProperty+"> ?label}";
+    public String selectLabels(String resource, String labelProperty){
         
-        return queryString;
+        return String.format(
+                "Select ?label where {<%1$s> <%2$s> ?label}",
+                resource,
+                labelProperty                
+            );
+        
     }
     
-    public String selectAllWithLabels(String labelProperty)
-    {
-        String queryString = "Select ?s ?p ?o ?slabel ?plabel ?olabel where {?s ?p ?o .\n"
-                + "?s <"+labelProperty+"> ?slabel .\n"
-                + "?p <"+labelProperty+"> ?plabel .\n"
-                + "?o <"+labelProperty+"> ?olabel .\n"
-                + " }";
+    public String selectAllWithLabels(String labelProperty){
         
-        return queryString;
+        return String.format(
+                "Select ?s ?p ?o ?slabel ?plabel ?olabel where {?s ?p ?o .\n"
+                        + "?s <%s> ?slabel .\n"
+                        + "?p <%s> ?plabel .\n"
+                        + "?o <%s> ?olabel .\n"
+                        + " }",
+                labelProperty          
+            );
+        
     }
     
-    public String selectAllWithLabels(String resource, String labelProperty)
-    {
-        String queryString = "Select * where {<"+resource+"> ?p ?o .\n"
-                + "<"+resource+"> <"+labelProperty+"> ?slabel .\n"
-                + "?p <"+labelProperty+"> ?plabel .\n"
-                + "?o <"+labelProperty+"> ?olabel .\n"
-                + " }";
-        
-        return queryString;
-    }
-    
-     public String selectAllOutgoingWithLabelsAndTypes(String resource, Set<String> labelProperties)
-    {
-        
-        String labelPropertiesParam= "";
-        
-        Iterator<String> iterator = labelProperties.iterator();
-        while(iterator.hasNext()) {
-            String labelProperty = iterator.next();  
-            labelPropertiesParam = labelPropertiesParam + " <"+labelProperty+"> |";
-        }
+    public String selectAllWithLabels(String resource, String labelProperty){
 
-        labelPropertiesParam =  labelPropertiesParam.substring(0,labelPropertiesParam.length()-1);
-
-        String queryString = "Select *  \n"+
-            "where\n"+
-            "{ {\n"+
-            "<"+resource+"> ?p ?o .\n"+
-            "<"+resource+">  rdf:type ?stype .\n"+
-            "OPTIONAL {<"+resource+">  \n"+
-            labelPropertiesParam +"  ?slabel }.\n"+
-
-            "OPTIONAL {?p "+labelPropertiesParam +" ?plabel }.\n"+
-            "OPTIONAL {?o "+labelPropertiesParam +"  ?olabel }.\n"+
-
-            "OPTIONAL {?o rdf:type ?otype} .\n"+
-            "} "+
-                 "UNION\n"+
-            "{ \n"+
-            "<"+resource+"> ?p ?o \n"+
-            ".\n"+
-            "<"+resource+">  rdf:type ?stype .\n"+
-             "OPTIONAL {<"+resource+">  \n"+
-            labelPropertiesParam +"  ?slabel }.\n"+
-            " OPTIONAL{?o "+labelPropertiesParam +"  ?olabel }.\n"+
-                   
-           "OPTIONAL {?p "+labelPropertiesParam +"  ?plabel }.\n"+
-        
-            "  \n"+
-            "FILTER(isLiteral(?o))\n"+
-            "} }\n";
-              
-        _logger.trace("QUERY"+queryString);
-        
-
-        return queryString;
+        return String.format(
+                "Select * where {<%1$s> ?p ?o .\n"
+                        + "<%1$s> <%2$s> ?slabel .\n"
+                        + "?p <%2$s> ?plabel .\n"
+                        + "?o <%2$s> ?olabel .\n"
+                        + " }",                
+                resource,
+                labelProperty
+            );
     }
+        
+    public String selectAllOutgoingWithLabelsAndTypes(String resource, Set<String> labelProperties){
+       
+ 
+       return String.format(
+               
+               "Select *  \n"+
+                       "where\n"+
+                       "{ {\n"+
+                       "<%1$s> ?p ?o .\n"+
+                       "<%1$s>  rdf:type ?stype .\n"+
+                       "OPTIONAL {<%1$s>  %2$s  ?slabel }.\n"+
+                       "OPTIONAL {?p %2$s ?plabel }.\n"+
+                       "OPTIONAL {?o %2$s ?olabel }.\n"+
+                       "OPTIONAL {?o rdf:type ?otype} .\n"+
+                       "} "+
+                        "UNION\n"+
+                       "{ \n"+
+                       "<%1$s> ?p ?o \n"+
+                       ".\n"+
+                       "<%1$s>  rdf:type ?stype .\n"+
+                       "OPTIONAL {<%1$s>  %2$s ?slabel }.\n"+
+                       "OPTIONAL {?o %2$s ?olabel }.\n"+                              
+                       "OPTIONAL {?p %2$s ?plabel }.\n"+
+                       "  \n"+
+                       "FILTER(isLiteral(?o))\n"+
+                       "} }\n",
+                       resource,       
+                       labelProperties.stream().collect(Collectors.joining("> | <", "<", ">"))
+               );
+       
+   }
+
     
     public String selectLabel(String resource, String labelProperty)
     {
-        String queryString = "Select ?label where {<"+resource+"> <"+labelProperty+"> ?label .\n"
-                + " }";  
-        return queryString;
+
+        return String.format(
+                "Select ?label where {<%1$s> <%2$s> ?label .\n"
+                    +" }",
+                resource,
+                labelProperty
+                
+            );
+        
     }
     
     public String selectType(String resource)
     {
-        String queryString = "Select ?type where {<"+resource+"> rdf:type ?type .\n"
-                + " }";  
-        return queryString;
+
+        return String.format(
+                "Select ?type where {<%s> rdf:type ?type .\n"
+                    +" }",
+                resource        
+            );
+        
     }
     
      public String returnLabel(String resource, String labelProperty) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception
@@ -271,7 +266,7 @@ public abstract class AbstractRDFManager implements Closeable{
 
             } 
             else {
-                List<Pair> objects = new ArrayList();
+                List<Pair> objects = new ArrayList<Pair>();
                 objects.add(mapValue);
                 outgoingLinks.put(mapKey, objects);
             }
@@ -290,8 +285,6 @@ public abstract class AbstractRDFManager implements Closeable{
         String query = selectAllOutgoingWithLabelsAndTypes(resource,labelProperty);
       
         List<BindingSet> sparqlResults = query(query);
-       
-        _logger.trace("QUERY"+query);
         
         for (BindingSet result : sparqlResults) {
            
@@ -335,7 +328,7 @@ public abstract class AbstractRDFManager implements Closeable{
 
              } 
              else {
-                List<Triple> objects = new ArrayList();
+                List<Triple> objects = new ArrayList<Triple>();
                 objects.add(mapValue);
                 outgoingLinks.put(mapKey, objects);
              }

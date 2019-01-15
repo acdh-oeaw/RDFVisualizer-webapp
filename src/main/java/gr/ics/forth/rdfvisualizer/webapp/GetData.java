@@ -5,7 +5,8 @@
  */
 package gr.ics.forth.rdfvisualizer.webapp;
 
-import gr.ics.forth.rdfvisualizer.api.core.impl.BlazeGraphManager;
+import gr.ics.forth.rdfvisualizer.api.core.impl.AbstractRDFManager;
+import gr.ics.forth.rdfvisualizer.api.core.impl.BlazegraphManager;
 import gr.ics.forth.rdfvisualizer.api.core.impl.RDFfileManager;
 import gr.ics.forth.rdfvisualizer.api.core.impl.TripleStoreManagerWorking;
 import gr.ics.forth.rdfvisualizer.api.core.utils.Triple;
@@ -24,8 +25,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -38,16 +38,19 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.repository.RepositoryException;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author cpetrakis
  */
 public class GetData extends HttpServlet {
-
-    private static BlazeGraphManager _manager;
+    private final static Logger _logger = LoggerFactory.getLogger(GetData.class);
 
     /**
      * ************************ Create Json File *****************************
@@ -295,12 +298,13 @@ public class GetData extends HttpServlet {
      * @param resource
      *
      * @return
+     * @throws Exception 
      * @throws org.openrdf.repository.RepositoryException
      * @throws org.openrdf.query.MalformedQueryException
      * @throws org.openrdf.query.QueryEvaluationException
      */
     
-    public JSONObject blazegraphcase(String resource) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception {
+    public JSONObject blazegraphcase(String resource) throws Exception{
        
 
         String subject = resource;
@@ -314,68 +318,54 @@ public class GetData extends HttpServlet {
         
         String label = props.getProperty("schema_label").trim();
         String pref_labels = props.getProperty("pref_labels").trim();
-
-
-        if(_manager == null) {
-            
-            HttpClient httpClient;
-            SslContextFactory sslContextFactory = new SslContextFactory(true);
-
-            httpClient = new HttpClient(sslContextFactory);
-            
-            
-            // Add authentication credentials
-            AuthenticationStore auth = httpClient.getAuthenticationStore();
-            auth.addAuthentication(new BasicAuthentication(URI.create(blazegraph_url), Authentication.ANY_REALM, blazegraph_user, blazegraph_password));
-
-            
-            httpClient.start();  
-            
-            _manager = new BlazeGraphManager();
-            
-            _manager.openConnectionToBlazegraph2(blazegraph_url, httpClient, Executors.newCachedThreadPool());
-        }
+        
+        JSONObject result = null;
  
+        try(BlazegraphManager manager = new BlazegraphManager(blazegraph_url, blazegraph_user, blazegraph_password)){
+            subject = subject.replaceAll(" |\\r|\\n|\"", "");
 
-//        ExecutorService executor = Executors.newCachedThreadPool();
-
-        //manager.openConnectionToBlazegraph(blazegraph_url);
-
-        subject = subject.replaceAll(" |\\r|\\n|\"", "");
-
-        if (subject.length() > 2000) {
-            subject = subject.substring(0, 500);
-        }
-
-        String subjectLabel = _manager.returnLabel(subject, label);
-        String subjectType = _manager.returnType(subject);
-
-        String[] pref_lbls = pref_labels.split(",");
-        
-
-        if ((subjectLabel.isEmpty()) && (pref_lbls.length > 0)) {
-            subjectLabel = _manager.returnLabel(subject, pref_lbls[0]);
-        }
-        
-        if (subjectLabel.isEmpty()) {
-            subjectLabel = "no label";
-        }
-                
-        Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
-        // Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
-
-        Set<String> labels = new TreeSet<String>();
-
-        labels.add(label);
-        if (pref_lbls[0].length() > 0) {
-            for (int i = 0; i < pref_lbls.length; i++) {
-                labels.add(pref_lbls[i]);
+            if (subject.length() > 2000) {
+                subject = subject.substring(0, 500);
             }
+
+            String subjectLabel = manager.returnLabel(subject, label);
+            String subjectType = manager.returnType(subject);
+
+            String[] pref_lbls = pref_labels.split(",");
+            
+
+            if ((subjectLabel.isEmpty()) && (pref_lbls.length > 0)) {
+                subjectLabel = manager.returnLabel(subject, pref_lbls[0]);
+            }
+            
+            if (subjectLabel.isEmpty()) {
+                subjectLabel = "no label";
+            }
+                    
+            Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
+            // Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
+
+            Set<String> labels = new TreeSet<String>();
+
+            labels.add(label);
+            if (pref_lbls[0].length() > 0) {
+                for (int i = 0; i < pref_lbls.length; i++) {
+                    labels.add(pref_lbls[i]);
+                }
+            }
+
+            outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels); 
+
+            result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject);
+
+            
+        }
+        catch (Exception ex) {
+            throw ex;
         }
 
-        outgoingLinks = _manager.returnOutgoingLinksWithTypes(subject, labels); 
 
-        JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject);
+
 
         return result;
     }
@@ -468,6 +458,7 @@ public class GetData extends HttpServlet {
     
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, RepositoryException, MalformedQueryException, QueryEvaluationException, Exception {
+        
 
         response.setContentType("text/html;charset=UTF-8");
 
@@ -499,55 +490,6 @@ public class GetData extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (RepositoryException ex) {
-            Logger.getLogger(GetData.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (MalformedQueryException ex) {
-            Logger.getLogger(GetData.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (QueryEvaluationException ex) {
-            Logger.getLogger(GetData.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-            Logger.getLogger(GetData.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (RepositoryException ex) {
-            Logger.getLogger(GetData.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (MalformedQueryException ex) {
-            Logger.getLogger(GetData.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (QueryEvaluationException ex) {
-            Logger.getLogger(GetData.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-            Logger.getLogger(GetData.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
     /**
      * Returns a short description of the servlet.
      *
@@ -558,4 +500,18 @@ public class GetData extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
+    @Override
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            processRequest(request, response);
+        } catch (RepositoryException ex) {
+            _logger.error("", ex);
+        } catch (MalformedQueryException ex) {
+            _logger.error("", ex);
+        } catch (QueryEvaluationException ex) {
+            _logger.error("", ex);
+        } catch (Exception ex) {
+            _logger.error("", ex);
+        }
+    }
 }
