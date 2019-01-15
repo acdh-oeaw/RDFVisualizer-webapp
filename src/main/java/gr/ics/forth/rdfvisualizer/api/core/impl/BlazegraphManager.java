@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class BlazegraphManager extends AbstractRDFManager{
     private final static Logger _logger = LoggerFactory.getLogger(BlazegraphManager.class);
     
-    private HttpClient httpClient;
+
     
 //    private RemoteRepository repo;
     private final RemoteRepositoryManager rpm;
@@ -58,7 +58,7 @@ public class BlazegraphManager extends AbstractRDFManager{
 
         SslContextFactory sslContextFactory = new SslContextFactory(true);
 
-        httpClient = new HttpClient(sslContextFactory);
+        HttpClient httpClient = new HttpClient(sslContextFactory);
     
     
         // Add authentication credentials
