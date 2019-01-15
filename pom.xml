@@ -23,6 +23,7 @@
         </repository>        
     </repositories>
     <build>
+    <finalName>RDFVisualizer</finalName>
     <pluginManagement>
         <plugins>
             <plugin>

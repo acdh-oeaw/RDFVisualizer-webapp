@@ -7,24 +7,29 @@ package gr.ics.forth.rdfvisualizer.api.core.impl;
 
 import gr.ics.forth.rdfvisualizer.api.core.utils.Pair;
 import gr.ics.forth.rdfvisualizer.api.core.utils.Triple;
+
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.bigdata.rdf.sail.webapp.client.RemoteRepository;
-import com.bigdata.rdf.sail.webapp.client.RemoteRepositoryManager;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
+
 import org.apache.jena.rdf.model.Resource;
 
-import org.eclipse.jetty.client.HttpClient;
+
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
-import org.openrdf.query.TupleQueryResult;
+
 import org.openrdf.repository.RepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 
 
@@ -32,59 +37,10 @@ import org.openrdf.repository.RepositoryException;
  *
  * @author minadakn
  */
-public class BlazeGraphManager {
-    private RemoteRepository repo;
-    public RemoteRepositoryManager repom;
-    public void openConnectionToBlazegraph(String sparqlEndPoint) throws RepositoryException, Exception{
-         
-       RemoteRepositoryManager repositoryManager = new RemoteRepositoryManager(sparqlEndPoint); 
-        this.repo = repositoryManager.getRepositoryForDefaultNamespace();
-
-        this.repo.getRemoteRepositoryManager().close();
-          // this.repo.getBigdataSailRemoteRepository().getConnection().close();
-    }
+public abstract class AbstractRDFManager implements Closeable{
+    private final static Logger _logger = LoggerFactory.getLogger(AbstractRDFManager.class);
     
-    
-    
-        public void openConnectionToBlazegraph2(String sparqlEndPoint, HttpClient httpClient, ExecutorService executor) throws RepositoryException, Exception{
-         
-
-        //this.repom = new RemoteRepositoryManager(sparqlEndPoint, httpClient, executor);
-        RemoteRepositoryManager repositoryManager = new RemoteRepositoryManager(sparqlEndPoint, httpClient, executor);
-       
-       this.repo = repositoryManager.getRepositoryForDefaultNamespace();
-       
-       this.repo.getRemoteRepositoryManager().close();
- 
-//        System.out.println("Finished execution");
-//        
-//        repo.close();
-    }
-    
-    
-    
-    
-    public void closeConnectionToBlazeGraph() throws RepositoryException, Exception{
-
-      this.repo.getBigdataSailRemoteRepository().getConnection().close();
-
-    }
-    
-    public List<BindingSet> query(String sparqlQuery) throws RepositoryException, Exception{
-        
-         List<BindingSet> retList= new ArrayList<>();
-        
-     //   RepositoryConnection repoConn=this.repo.getConnection();
-        
-        TupleQueryResult results = this.repo.prepareTupleQuery(sparqlQuery).evaluate();
-        
-        while(results.hasNext())
-            retList.add(results.next());
-           
-        results.close();
-        
-        return retList;
-    }
+    public abstract List<BindingSet> query(String sparqlQuery) throws RepositoryException, Exception;
     
     public String selectAll()
     {
@@ -175,16 +131,8 @@ public class BlazeGraphManager {
     
      public String selectAllOutgoingWithLabelsAndTypes(String resource, Set<String> labelProperties)
     {
-//        String queryString = "Select *  where {<"+resource+"> ?p ?o .\n"
-//                + "<"+resource+"> rdf:type ?stype .\n"
-//                + "<"+resource+"> <"+labelProperty+"> ?slabel .\n"
-//                + "OPTIONAL {?p <"+labelProperty+"> ?plabel }.\n"
-//                //+ "OPTIONAL {?p rdf:type ?ptype} .\n"
-//                + "?o <"+labelProperty+"> ?olabel .\n"
-//                + "OPTIONAL {?o rdf:type ?otype} .\n"
-//                + " }";
         
-         String labelPropertiesParam= "";
+        String labelPropertiesParam= "";
         
         Iterator<String> iterator = labelProperties.iterator();
         while(iterator.hasNext()) {
@@ -221,7 +169,8 @@ public class BlazeGraphManager {
             "  \n"+
             "FILTER(isLiteral(?o))\n"+
             "} }\n";
-              System.out.println("QUERY"+queryString);
+              
+        _logger.trace("QUERY"+queryString);
         
 
         return queryString;
@@ -252,7 +201,7 @@ public class BlazeGraphManager {
        
         for (BindingSet result : sparqlResults) {
            
-            System.out.println("LABEL: "+result.toString());
+            _logger.trace("LABEL: "+result.toString());
            
             label = result.getBinding("label").getValue().stringValue();
 
@@ -273,7 +222,7 @@ public class BlazeGraphManager {
        
         for (BindingSet result : sparqlResults) {
            
-            System.out.println("LABEL: "+result.toString());
+            _logger.trace("LABEL: "+result.toString());
            
             label = result.getBinding("type").getValue().stringValue();
 
@@ -284,45 +233,10 @@ public class BlazeGraphManager {
     }
     
     
-//    public Map<String,List<String>> returnOutgoingLinks(String resource) throws RepositoryException, MalformedQueryException, QueryEvaluationException
-//    {
-//
-//        Map<String,List<String>> outgoingLinks = new HashMap<String,List<String>>();
-//        
-//        String query = selectAll(resource);
-//      
-//        List<BindingSet> sparqlResults = query(query);
-//       
-//        for (BindingSet result : sparqlResults) {
-//           
-//            System.out.println(result.toString());
-//           
-//            String key = result.getBinding("p").getValue().stringValue();
-//            String value = result.getBinding("o").getValue().stringValue();
-//            
-//             if(outgoingLinks.containsKey(key)) {
-//
-//             List<String> objects = outgoingLinks.get(key);
-//
-//             objects.add(value);
-//
-//        outgoingLinks.put(key, objects);
-//
-//    } else {
-//            List<String> objects = new ArrayList();
-//            objects.add(value);
-//            outgoingLinks.put(key, objects);
-//      
-//
-//    }
-//    }
-//
-//        return outgoingLinks;
-//        
-//    }
+
     
-     public Map<Pair,List<Pair>> returnOutgoingLinks(String resource, String labelProperty) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception
-    {
+     public Map<Pair,List<Pair>> returnOutgoingLinks(String resource, String labelProperty) 
+             throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception {
 
         Map<Pair,List<Pair>> outgoingLinks = new HashMap<Pair,List<Pair>>();
         
@@ -332,7 +246,7 @@ public class BlazeGraphManager {
        
         for (BindingSet result : sparqlResults) {
            
-            System.out.println(result.toString());
+            _logger.trace(result.toString());
            
             Pair mapKey = new Pair();
             Pair mapValue = new Pair();
@@ -347,28 +261,29 @@ public class BlazeGraphManager {
             mapValue.setPairKey(value_uri);
             mapValue.setPairValue(value_label);           
             
-             if(outgoingLinks.containsKey(mapKey)) {
+            if(outgoingLinks.containsKey(mapKey)) {
 
              List<Pair> objects = outgoingLinks.get(mapKey);
 
              objects.add(mapValue);
 
-        outgoingLinks.put(mapKey, objects);
+             outgoingLinks.put(mapKey, objects);
 
-    } else {
-            List<Pair> objects = new ArrayList();
-            objects.add(mapValue);
-            outgoingLinks.put(mapKey, objects);
-    }
-    }
+            } 
+            else {
+                List<Pair> objects = new ArrayList();
+                objects.add(mapValue);
+                outgoingLinks.put(mapKey, objects);
+            }
+        }
 
         return outgoingLinks;
         
     }
     
      
-         public Map<Triple,List<Triple>> returnOutgoingLinksWithTypes(String resource,Set<String> labelProperty) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception
-    {
+     public Map<Triple,List<Triple>> returnOutgoingLinksWithTypes(String resource,Set<String> labelProperty) 
+             throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception{
 
         Map<Triple,List<Triple>> outgoingLinks = new HashMap<Triple,List<Triple>>();
         
@@ -376,19 +291,18 @@ public class BlazeGraphManager {
       
         List<BindingSet> sparqlResults = query(query);
        
-        System.out.println("QUERY"+query);
+        _logger.trace("QUERY"+query);
+        
         for (BindingSet result : sparqlResults) {
            
-           // System.out.println(result.toString());
            
             Triple mapKey = new Triple();
             Triple mapValue = new Triple();
             
             String key_uri = result.getBinding("p").getValue().stringValue();
             String key_label = "NOLABEL";
-           // System.out.println("KEY_URI"+key_uri);
             if(result.getBinding("plabel")!=null)
-            key_label = result.getBinding("plabel").getValue().stringValue();
+                key_label = result.getBinding("plabel").getValue().stringValue();
             
             //String key_type = result.getBinding("ptype").getValue().stringValue();
             String key_type = "NOTYPE";
@@ -410,34 +324,28 @@ public class BlazeGraphManager {
             mapValue.setType(value_type);
             
             
-//            String value_uri = result.getBinding("o").getValue().stringValue();
-//            String value_label = result.getBinding("olabel").getValue().stringValue();
-//            String value_type = result.getBinding("otype").getValue().stringValue();
-//            mapValue.setSubject(value_uri);
-//            mapValue.setLabel(value_label);
-//            mapValue.setType(value_type);
-//            
+           
              if(outgoingLinks.containsKey(mapKey)) {
 
-             List<Triple> objects = outgoingLinks.get(mapKey);
+                 List<Triple> objects = outgoingLinks.get(mapKey);
+    
+                 objects.add(mapValue);
+    
+                 outgoingLinks.put(mapKey, objects);
 
-             objects.add(mapValue);
-
-        outgoingLinks.put(mapKey, objects);
-
-    } else {
-            List<Triple> objects = new ArrayList();
-            objects.add(mapValue);
-            outgoingLinks.put(mapKey, objects);
-    }
-    }
+             } 
+             else {
+                List<Triple> objects = new ArrayList();
+                objects.add(mapValue);
+                outgoingLinks.put(mapKey, objects);
+             }
+        }
 
         return outgoingLinks;
         
     }
     
-     public List<String> returnSubjects(String namedGraph) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception
-     {
+     public List<String> returnSubjects(String namedGraph) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception{
 
         List<String> subjects = new ArrayList<>();
         
@@ -450,7 +358,7 @@ public class BlazeGraphManager {
        
         for (BindingSet result : sparqlResults) {
            
-            System.out.println(result.toString());
+            _logger.trace(result.toString());
            
             String value = result.getBinding("s").getValue().stringValue();
             
@@ -460,4 +368,10 @@ public class BlazeGraphManager {
         return subjects;
         
     }
+
+
+
+    @Override
+    public abstract void close() throws IOException;
+
 }
