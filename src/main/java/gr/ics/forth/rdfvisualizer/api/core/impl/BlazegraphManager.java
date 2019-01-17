@@ -33,9 +33,13 @@ import org.slf4j.LoggerFactory;
 public class BlazegraphManager extends AbstractRDFManager{
     private final static Logger _logger = LoggerFactory.getLogger(BlazegraphManager.class);
     
+    private static HttpClient _httpClient;
+    
 
     
-//    private RemoteRepository repo;
+
+    
+//    private RemoteRepository repo
     private final RemoteRepositoryManager rpm;
     
     
@@ -55,19 +59,22 @@ public class BlazegraphManager extends AbstractRDFManager{
     
     
     public BlazegraphManager(String blazegraphUrl, String blazegraphUser, String blazegraphPassword) throws RepositoryException, Exception{
+        if(_httpClient == null) {
 
-        SslContextFactory sslContextFactory = new SslContextFactory(true);
-
-        HttpClient httpClient = new HttpClient(sslContextFactory);
+            SslContextFactory sslContextFactory = new SslContextFactory(true);
     
-    
-        // Add authentication credentials
-        AuthenticationStore auth = httpClient.getAuthenticationStore();
-        auth.addAuthentication(new BasicAuthentication(URI.create(blazegraphUrl), Authentication.ANY_REALM, blazegraphUser, blazegraphPassword));
-       
-        httpClient.start();  
+            _httpClient = new HttpClient(sslContextFactory);
         
-        this.rpm = new RemoteRepositoryManager(blazegraphUrl, httpClient, Executors.newCachedThreadPool());
+        
+            // Add authentication credentials
+            AuthenticationStore auth = _httpClient.getAuthenticationStore();
+            auth.addAuthentication(new BasicAuthentication(URI.create(blazegraphUrl), Authentication.ANY_REALM, blazegraphUser, blazegraphPassword));
+        }
+       
+        if(!_httpClient.isStarted())
+            _httpClient.start();  
+        
+        this.rpm = new RemoteRepositoryManager(blazegraphUrl, _httpClient, Executors.newCachedThreadPool());
             
     }    
     

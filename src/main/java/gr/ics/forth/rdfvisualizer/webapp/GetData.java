@@ -5,7 +5,7 @@
  */
 package gr.ics.forth.rdfvisualizer.webapp;
 
-import gr.ics.forth.rdfvisualizer.api.core.impl.AbstractRDFManager;
+
 import gr.ics.forth.rdfvisualizer.api.core.impl.BlazegraphManager;
 import gr.ics.forth.rdfvisualizer.api.core.impl.RDFfileManager;
 import gr.ics.forth.rdfvisualizer.api.core.impl.TripleStoreManagerWorking;
@@ -13,7 +13,6 @@ import gr.ics.forth.rdfvisualizer.api.core.utils.Triple;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -23,18 +22,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.Authentication;
-import org.eclipse.jetty.client.api.AuthenticationStore;
-import org.eclipse.jetty.client.util.BasicAuthentication;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.repository.RepositoryException;
@@ -153,7 +146,8 @@ public class GetData extends HttpServlet {
 
                 if ((propval == null) || propval.equals("")) {
                     object.put("predicate", entry.getKey().getLabel());
-                } else {
+                } 
+                else {
                     object.put("predicate", pred_props.getProperty((entry.getKey().getLabel()).replaceAll(" ", "_")));
                 }
                 object.put("predicate_uri", entry.getKey().getSubject());
@@ -271,7 +265,7 @@ public class GetData extends HttpServlet {
 
         Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
 
-        Set<String> labels = new TreeSet();
+        Set<String> labels = new TreeSet<String>();
 
         labels.add(label);
         if (pref_lbls[0].length() > 0) {
@@ -319,7 +313,10 @@ public class GetData extends HttpServlet {
         String label = props.getProperty("schema_label").trim();
         String pref_labels = props.getProperty("pref_labels").trim();
         
-        JSONObject result = null;
+        String exclude_inverse = props.getProperty("exclude_inverse").trim();        
+        List<String> exclusions = Arrays.asList(exclude_inverse.split("\\s*,\\s*"));
+        
+        
  
         try(BlazegraphManager manager = new BlazegraphManager(blazegraph_url, blazegraph_user, blazegraph_password)){
             subject = subject.replaceAll(" |\\r|\\n|\"", "");
@@ -338,9 +335,9 @@ public class GetData extends HttpServlet {
                 subjectLabel = manager.returnLabel(subject, pref_lbls[0]);
             }
             
-            if (subjectLabel.isEmpty()) {
+/*            if (subjectLabel.isEmpty()) {
                 subjectLabel = "no label";
-            }
+            }*/
                     
             Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
             // Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
@@ -356,18 +353,21 @@ public class GetData extends HttpServlet {
 
             outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels); 
 
-            result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject);
+            JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject);
+            
+
+            Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
+            incomingLinks = manager.returnIncomingLinksWithTypes(subject, labels, exclusions);
+            JSONObject result0 = createInvertJsonFile(incomingLinks, subjectLabel, subjectType, subject);
+
+            //merge json shows inverse labels otherwise only outgoing links 
+            return mergeJson(result, result0, subjectLabel, subjectType, subject);//result;
 
             
         }
         catch (Exception ex) {
             throw ex;
         }
-
-
-
-
-        return result;
     }
 
 
