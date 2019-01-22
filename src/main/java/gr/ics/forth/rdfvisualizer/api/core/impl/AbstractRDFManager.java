@@ -37,13 +37,13 @@ import org.slf4j.LoggerFactory;
  * @author minadakn
  */
 public abstract class AbstractRDFManager implements Closeable{
-    private final static Logger _logger = LoggerFactory.getLogger(AbstractRDFManager.class);
+//    private final static Logger _logger = LoggerFactory.getLogger(AbstractRDFManager.class);
     
     public abstract List<BindingSet> query(String sparqlQuery) throws RepositoryException, Exception;
     
     public String selectAll(){
         
-        return "Select * where {?s ?p ?o}";
+        return "SELECT * WHERE {?s ?p ?o}";
     
     }
     
@@ -51,7 +51,7 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectAll(List<String> namedgraphs){
         
         return String.format(
-                "Select * \n %s WHERE {?s ?p ?o}",
+                "SELECT * %s WHERE {?s ?p ?o}",
                 namedgraphs.stream().collect(Collectors.joining(">\nFROM <", "FROM <", ">"))
             );
         
@@ -60,7 +60,7 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectAll(Resource resource){
         
         return String.format(
-                "Select * where {<%s> ?p ?o}",
+                "SELECT * WHERE {<%s> ?p ?o}",
                 resource.getURI().toString()               
             );
         
@@ -69,7 +69,7 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectAll(Resource resource,List<String> namedgraphs){
         
         return String.format(
-                "Select * \n%1$sWHERE {<%2$s> ?p ?o}",
+                "SELECT * \n%1$s WHERE {<%2$s> ?p ?o}",
                 namedgraphs.stream().collect(Collectors.joining(">\nFROM <", "FROM <", ">")),
                 resource.getURI().toString()
             );
@@ -78,7 +78,7 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectAll(String resource){
         
         return String.format(
-                "Select * where {<%s> ?p ?o}",
+                "SELECT * WHERE {<%s> ?p ?o}",
                 resource
             );
     }
@@ -86,7 +86,7 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectAll(String resource,List<String> namedgraphs){
         
         return String.format(
-                "Select * \n%1$sWHERE {<%2$s> ?p ?o}",
+                "SELECT * \n%1$s WHERE {<%2$s> ?p ?o}",
                 namedgraphs.stream().collect(Collectors.joining(">\nFROM <", "FROM <", ">")),
                 resource
             );
@@ -95,7 +95,7 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectLabels(String resource, String labelProperty){
         
         return String.format(
-                "Select ?label where {<%1$s> <%2$s> ?label}",
+                "SELECT ?label WHERE {<%1$s> <%2$s> ?label}",
                 resource,
                 labelProperty                
             );
@@ -105,7 +105,7 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectAllWithLabels(String labelProperty){
         
         return String.format(
-                "Select ?s ?p ?o ?slabel ?plabel ?olabel where {?s ?p ?o .\n"
+                "SELECT ?s ?p ?o ?slabel ?plabel ?olabel WHERE {?s ?p ?o .\n"
                         + "?s <%s> ?slabel .\n"
                         + "?p <%s> ?plabel .\n"
                         + "?o <%s> ?olabel .\n"
@@ -118,7 +118,7 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectAllWithLabels(String resource, String labelProperty){
 
         return String.format(
-                "Select * where {<%1$s> ?p ?o .\n"
+                "SELECT * WHERE {<%1$s> ?p ?o .\n"
                         + "<%1$s> <%2$s> ?slabel .\n"
                         + "?p <%2$s> ?plabel .\n"
                         + "?o <%2$s> ?olabel .\n"
@@ -164,18 +164,17 @@ public abstract class AbstractRDFManager implements Closeable{
  
        return String.format(
                
-               "SELECT *  \n"+
-               "WHERE\n"+
-               "{ {\n"+
+               "SELECT * WHERE {\n"+
+               " {\n"+
                "<%1$s> ?p ?o .\n"+
                "<%1$s>  rdf:type ?stype .\n"+
                "OPTIONAL {<%1$s>  %2$s  ?slabel }.\n"+
                "OPTIONAL {?p %2$s ?plabel }.\n"+
                "OPTIONAL {?o %2$s ?olabel }.\n"+
                "OPTIONAL {?o rdf:type ?otype} .\n"+
-               "} "+
+               " } "+
                 "UNION\n"+
-               "{ \n"+
+               " { \n"+
                "<%1$s> ?p ?o .\n"+
                "<%1$s>  rdf:type ?stype .\n"+
                "OPTIONAL {<%1$s>  %2$s ?slabel }.\n"+
@@ -193,7 +192,7 @@ public abstract class AbstractRDFManager implements Closeable{
     
     public String selectLabel(String resource, String labelProperty) {
 
-        return String.format("Select ?label where {<%1$s> <%2$s> ?label .\n" + " }", resource, labelProperty
+        return String.format("SELECT ?label WHERE {<%1$s> <%2$s> ?label .\n" + " }", resource, labelProperty
 
         );
 
@@ -201,7 +200,7 @@ public abstract class AbstractRDFManager implements Closeable{
     
     public String selectType(String resource) {
 
-        return String.format("Select ?type where {<%s> rdf:type ?type .\n" + " }", resource);
+        return String.format("SELECT ?type WHERE {<%s> rdf:type ?type .\n" + " }", resource);
 
     }
     
@@ -221,8 +220,6 @@ public abstract class AbstractRDFManager implements Closeable{
         String label = "";
 
         for (BindingSet result : sparqlResults) {
-
-            _logger.trace("LABEL: " + result.toString());
 
             label = result.getBinding("label").getValue().stringValue();
 
@@ -440,8 +437,6 @@ public abstract class AbstractRDFManager implements Closeable{
         List<BindingSet> sparqlResults = query(query);
        
         for (BindingSet result : sparqlResults) {
-           
-            _logger.trace(result.toString());
            
             String value = result.getBinding("s").getValue().stringValue();
             
