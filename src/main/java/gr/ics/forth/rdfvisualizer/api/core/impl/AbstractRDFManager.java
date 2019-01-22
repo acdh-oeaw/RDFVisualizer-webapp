@@ -205,7 +205,7 @@ public abstract class AbstractRDFManager implements Closeable{
     
     public String selectGraph(String resource) {
         
-        return String.format("SELECT ?g WHERE {GRAPH ?g { <%s> ?p ?o }}", resource);
+        return String.format("SELECT DISTINCT ?g WHERE {GRAPH ?g { <%s> ?p ?o }}", resource);
         
     }
     
