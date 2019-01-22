@@ -131,9 +131,8 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectAllIncomingWithLabelsAndTypes(String resource, Set<String> labelProperties, List<String> urisToExclude, String graph){
         
        return String.format(
-               "SELECT * FROM <%4$s> \n"+
-               "WHERE\n"+
-               "{ {\n"+
+               "SELECT * FROM <%4$s> WHERE {\n"+
+               " {\n"+
                " ?o ?p <%1$s>.\n"+
                "<%1$s>  rdf:type ?stype .\n"+
                "<%1$s>  \n%2$s  ?slabel .\n"+
@@ -150,7 +149,7 @@ public abstract class AbstractRDFManager implements Closeable{
                "OPTIONAL {?p %2$s  ?plabel }.\n"+                  
                "  \n"+
                "FILTER(isLiteral(?o))\n"+
-               "%3$s} }\n",                             
+               "%3$s}\n}",                             
              resource,
              labelProperties.stream().collect(Collectors.joining("> | <", "<", ">")),
              urisToExclude.stream().collect(Collectors.joining(">)\n FILTER (?p!= <", " FILTER (?p!= <", ">)")),

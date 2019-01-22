@@ -91,26 +91,27 @@ public class BlazegraphManager extends AbstractRDFManager{
 
     }
     
-    public synchronized List<BindingSet> query(String sparqlQuery) throws RepositoryException, Exception{
-        
-         List<BindingSet> retList= new ArrayList<>();
-        
-         _logger.trace(sparqlQuery);
-        
-        TupleQueryResult results = this.rpm.getRepositoryForDefaultNamespace().prepareTupleQuery(sparqlQuery).evaluate();
-        
-        while(results.hasNext()) {
-            
+    public synchronized List<BindingSet> query(String sparqlQuery) throws RepositoryException, Exception {
+
+        List<BindingSet> retList = new ArrayList<>();
+
+        _logger.trace(sparqlQuery);
+
+        TupleQueryResult results = this.rpm.getRepositoryForDefaultNamespace().prepareTupleQuery(sparqlQuery)
+                .evaluate();
+
+        while (results.hasNext()) {
+
             BindingSet set = results.next();
-            
+
             _logger.trace(set.toString());
-            
+
             retList.add(set);
-              
+
         }
-           
+
         results.close();
-        
+
         return retList;
     }
 }
