@@ -128,10 +128,10 @@ public abstract class AbstractRDFManager implements Closeable{
             );
     }
     
-    public String selectAllIncomingWithLabelsAndTypes(String resource, Set<String> labelProperties, List<String> urisToExclude, String graph){
+    public String selectAllIncomingWithLabelsAndTypes(String resource, Set<String> labelProperties, List<String> urisToExclude){
         
        return String.format(
-               "SELECT * FROM <%4$s> WHERE {\n"+
+               "SELECT * WHERE {\n"+
                " {\n"+
                " ?o ?p <%1$s>.\n"+
                "<%1$s>  rdf:type ?stype .\n"+
@@ -152,8 +152,7 @@ public abstract class AbstractRDFManager implements Closeable{
                "%3$s}\n}",                             
              resource,
              labelProperties.stream().collect(Collectors.joining("> | <", "<", ">")),
-             urisToExclude.stream().collect(Collectors.joining(">)\n FILTER (?p!= <", " FILTER (?p!= <", ">)")),
-             graph
+             urisToExclude.stream().collect(Collectors.joining(">)\n FILTER (?p!= <", " FILTER (?p!= <", ">)"))
            );
        
    }
@@ -255,17 +254,13 @@ public abstract class AbstractRDFManager implements Closeable{
 
         Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
         
-        //get graph
-        String query = selectGraph(resource);        
-        List<BindingSet> sparqlResults = query(query);  
-        
-        if(!sparqlResults.isEmpty()) {
-            String graph = sparqlResults.get(0).getBinding("g").getValue().stringValue();
 
 
-            query = selectAllIncomingWithLabelsAndTypes(resource, labelProperty, urisToExclude, graph);
+
+
+            String query = selectAllIncomingWithLabelsAndTypes(resource, labelProperty, urisToExclude);
     
-            sparqlResults = query(query);
+            List<BindingSet>sparqlResults = query(query);
     
             for (BindingSet result : sparqlResults) {
     
@@ -312,7 +307,7 @@ public abstract class AbstractRDFManager implements Closeable{
                     objects.add(mapValue);
                     outgoingLinks.put(mapKey, objects);
                 }
-            }
+
         }
 
         return outgoingLinks;
