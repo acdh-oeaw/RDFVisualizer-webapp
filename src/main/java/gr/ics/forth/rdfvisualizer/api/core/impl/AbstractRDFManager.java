@@ -131,25 +131,27 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectAllIncomingWithLabelsAndTypes(String resource, Set<String> labelProperties, List<String> urisToExclude){
         
        return String.format(
-               "SELECT * WHERE {\n"+
-               " {\n"+
-               " ?o ?p <%1$s>.\n"+
-               "<%1$s>  rdf:type ?stype .\n"+
-               "<%1$s>  \n%2$s  ?slabel .\n"+
-               "OPTIONAL {?p %2$s ?plabel }.\n"+
-               "OPTIONAL {?o %2$s  ?olabel }.\n"+
-               "OPTIONAL {?o rdf:type ?otype} .\n"+
-               "%3$s} \n"+
-               "UNION\n"+
-               "{ \n"+
-               "?o ?p <%1$s> .\n"+
-               "<%1$s>  rdf:type ?stype .\n"+
-               "<%1$s>  \n%2$s  ?slabel .\n"+
-               " OPTIONAL{?o %2$s  ?olabel }.\n"+
-               "OPTIONAL {?p %2$s  ?plabel }.\n"+                  
-               "  \n"+
-               "FILTER(isLiteral(?o))\n"+
-               "%3$s}\n}",                             
+               "SELECT * WHERE {\n"
+               + " {\n"
+               + " ?o ?p <%1$s>.\n"
+               + "<%1$s>  rdf:type ?stype .\n"
+               + "<%1$s>  \n%2$s  ?slabel .\n"
+               + "OPTIONAL {?p %2$s ?plabel }.\n"
+               + "OPTIONAL {?o %2$s  ?olabel }.\n"
+               + "OPTIONAL {?o rdf:type ?otype} .\n"
+               + "%3$s} \n"
+               + "UNION\n"
+               + "{ \n"
+               + "?o ?p <%1$s> .\n"
+               + "<%1$s>  rdf:type ?stype .\n"
+               + "<%1$s>  \n%2$s  ?slabel .\n"
+               + " OPTIONAL{?o %2$s  ?olabel }.\n"
+               + "OPTIONAL {?p %2$s  ?plabel }.\n"                  
+               + "  \n"
+               + "FILTER(isLiteral(?o))\n"
+               + "%3$s}\n"
+               + "FILTER (lang(?plabel) = 'en')\n" 
+               + "}",                             
              resource,
              labelProperties.stream().collect(Collectors.joining("> | <", "<", ">")),
              urisToExclude.stream().collect(Collectors.joining(">)\n FILTER (?p!= <", " FILTER (?p!= <", ">)"))
@@ -162,25 +164,27 @@ public abstract class AbstractRDFManager implements Closeable{
  
        return String.format(
                
-               "SELECT * WHERE {\n"+
-               " {\n"+
-               "<%1$s> ?p ?o .\n"+
-               "<%1$s>  rdf:type ?stype .\n"+
-               "OPTIONAL {<%1$s>  %2$s  ?slabel }.\n"+
-               "OPTIONAL {?p %2$s ?plabel }.\n"+
-               "OPTIONAL {?o %2$s ?olabel }.\n"+
-               "OPTIONAL {?o rdf:type ?otype} .\n"+
-               " } "+
-                "UNION\n"+
-               " { \n"+
-               "<%1$s> ?p ?o .\n"+
-               "<%1$s>  rdf:type ?stype .\n"+
-               "OPTIONAL {<%1$s>  %2$s ?slabel }.\n"+
-               "OPTIONAL {?o %2$s ?olabel }.\n"+                              
-               "OPTIONAL {?p %2$s ?plabel }.\n"+
-               "  \n"+
-               "FILTER(isLiteral(?o))\n"+
-               " }\n}",
+               "SELECT * WHERE {\n"
+               + " {\n"
+               + "<%1$s> ?p ?o .\n"
+               + "<%1$s>  rdf:type ?stype .\n"
+               + "OPTIONAL {<%1$s>  %2$s  ?slabel }.\n"
+               + "OPTIONAL {?p %2$s ?plabel }.\n"
+               + "OPTIONAL {?o %2$s ?olabel }.\n"
+               + "OPTIONAL {?o rdf:type ?otype} .\n"
+               + " } "
+               + "UNION\n"
+               + " { \n"
+               + "<%1$s> ?p ?o .\n"
+               + "<%1$s>  rdf:type ?stype .\n"
+               + "OPTIONAL {<%1$s>  %2$s ?slabel }.\n"
+               + "OPTIONAL {?o %2$s ?olabel }.\n"                              
+               + "OPTIONAL {?p %2$s ?plabel }.\n"
+               + "  \n"
+               + "FILTER(isLiteral(?o))\n"
+               + " }\n"
+               + "FILTER (lang(?plabel) = 'en')\n" 
+               + "}",
                resource,       
                labelProperties.stream().collect(Collectors.joining("> | <", "<", ">"))
                );
