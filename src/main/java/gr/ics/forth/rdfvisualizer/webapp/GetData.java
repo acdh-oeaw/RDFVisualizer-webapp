@@ -45,63 +45,6 @@ import org.slf4j.LoggerFactory;
 public class GetData extends HttpServlet {
     private final static Logger _logger = LoggerFactory.getLogger(GetData.class);
 
-    /**
-     * ************************ Create Json File *****************************
-     * @param outgoingLinks
-     * @param subjectLabel
-     * @param subjectType
-     * @param subject
-     * @return
-     * @throws org.openrdf.repository.RepositoryException
-     * @throws org.openrdf.query.MalformedQueryException
-     * @throws org.openrdf.query.QueryEvaluationException
-     */
-    public JSONObject createJsonFile(Map<Triple, List<Triple>> outgoingLinks, String subjectLabel, String subjectType, String subject)
-            throws RepositoryException, MalformedQueryException, QueryEvaluationException {
-
-        Iterator<Map.Entry<Triple, List<Triple>>> iter = outgoingLinks.entrySet().iterator();
-
-        JSONObject subjectlist = new JSONObject();
-        subjectlist.put("type", subjectType);
-        subjectlist.put("label", subjectLabel);
-        subjectlist.put("subject", subject);
-
-        JSONObject result = new JSONObject();
-        JSONArray objects = new JSONArray();
-
-        GetConfigProperties pred_app = new GetConfigProperties();
-        Properties pred_props = pred_app.getConfig("predicates.properties");
-
-        while (iter.hasNext()) {
-
-            Map.Entry<Triple, List<Triple>> entry = iter.next();
-            List<Triple> l = new ArrayList<Triple>();
-
-            l = entry.getValue();
-
-            for (int i = 0; i < l.size(); i++) {
-
-                JSONObject object = new JSONObject();
-                String propval = pred_props.getProperty((entry.getKey().getLabel()).replaceAll(" ", "_"));
-
-                if ((propval == null) || propval.equals("")) {
-                    object.put("predicate", entry.getKey().getLabel());
-                } else {
-                    object.put("predicate", pred_props.getProperty((entry.getKey().getLabel()).replaceAll(" ", "_")));
-                }
-                object.put("predicate_uri", entry.getKey().getSubject());
-                object.put("predicate_type", entry.getKey().getType());
-                object.put("label", entry.getValue().get(i).getLabel());
-                object.put("uri", entry.getValue().get(i).getSubject());
-                object.put("type", entry.getValue().get(i).getType());
-                objects.put(object);
-            }
-            result.put("Objects", objects);
-        }
-
-        result.put("Subject", subjectlist);
-        return result;
-    }
     
     /**
      * ************************ Create Inverse properties Json File *****************************
@@ -115,10 +58,9 @@ public class GetData extends HttpServlet {
      * @throws org.openrdf.query.QueryEvaluationException
      */
 
-    public JSONObject createInvertJsonFile(Map<Triple, List<Triple>> outgoingLinks, String subjectLabel, String subjectType, String subject)
+    public JSONObject createJsonFile(Map<Triple, List<Triple>> outgoingLinks, String subjectLabel, String subjectType, String subject, boolean invert)
             throws RepositoryException, MalformedQueryException, QueryEvaluationException {
 
-        Iterator<Map.Entry<Triple, List<Triple>>> iter = outgoingLinks.entrySet().iterator();
 
         JSONObject subjectlist = new JSONObject();
         subjectlist.put("type", subjectType);
@@ -131,15 +73,9 @@ public class GetData extends HttpServlet {
         GetConfigProperties pred_app = new GetConfigProperties();
         Properties pred_props = pred_app.getConfig("predicates.properties");
 
-        while (iter.hasNext()) {
+        for(Map.Entry<Triple, List<Triple>> entry : outgoingLinks.entrySet()) {
 
-            Map.Entry<Triple, List<Triple>> entry = iter.next();
-
-            List<Triple> l = new ArrayList<Triple>();
-
-            l = entry.getValue();
-
-            for (int i = 0; i < l.size(); i++) {
+            for (Triple valueTriple : entry.getValue()) {
 
                 JSONObject object = new JSONObject();
                 String propval = pred_props.getProperty((entry.getKey().getLabel()).replaceAll(" ", "_"));
@@ -152,9 +88,9 @@ public class GetData extends HttpServlet {
                 }
                 object.put("predicate_uri", entry.getKey().getSubject());
                 object.put("predicate_type", entry.getKey().getType());
-                object.put("label", entry.getValue().get(i).getLabel());
-                object.put("uri", entry.getValue().get(i).getSubject());
-                object.put("type", entry.getValue().get(i).getType());
+                object.put("label", valueTriple.getLabel());
+                object.put("uri", valueTriple.getSubject());
+                object.put("type", valueTriple.getType());
                 object.put("invert", true);
                 objects.put(object);
             }
@@ -275,7 +211,7 @@ public class GetData extends HttpServlet {
         }
         
         outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels, db_graphname);  
-        JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject);
+        JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject, false);
 
       //  Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
       //  incomingLinks = manager.returnIncomingLinksWithTypes(subject, labels, db_graphname, exclusions);
@@ -353,12 +289,12 @@ public class GetData extends HttpServlet {
 
             outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels); 
 
-            JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject);
+            JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject, false);
             
 
             Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
             incomingLinks = manager.returnIncomingLinksWithTypes(subject, labels, exclusions);
-            JSONObject result0 = createInvertJsonFile(incomingLinks, subjectLabel, subjectType, subject);
+            JSONObject result0 = createJsonFile(incomingLinks, subjectLabel, subjectType, subject, true);
 
             //merge json shows inverse labels otherwise only outgoing links 
             return mergeJson(result, result0, subjectLabel, subjectType, subject);//result;
@@ -437,7 +373,7 @@ public class GetData extends HttpServlet {
                 
 
         outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels);
-        JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject);
+        JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject, false);
                        
         return result;
 

@@ -131,25 +131,14 @@ public abstract class AbstractRDFManager implements Closeable{
     public String selectAllIncomingWithLabelsAndTypes(String resource, Set<String> labelProperties, List<String> urisToExclude){
         
        return String.format(
-               "SELECT * WHERE {\n"
+               "SELECT DISTINCT ?p ?plabel ?o ?olabel ?otype WHERE {\n"
                + " {\n"
                + " ?o ?p <%1$s>.\n"
-               + "<%1$s>  rdf:type ?stype .\n"
-               + "<%1$s>  \n%2$s  ?slabel .\n"
+               + "<%1$s>  %2$s  ?slabel .\n"
                + "OPTIONAL {?p %2$s ?plabel }.\n"
                + "OPTIONAL {?o %2$s  ?olabel }.\n"
                + "OPTIONAL {?o rdf:type ?otype} .\n"
                + "%3$s} \n"
-               + "UNION\n"
-               + "{ \n"
-               + "?o ?p <%1$s> .\n"
-               + "<%1$s>  rdf:type ?stype .\n"
-               + "<%1$s>  \n%2$s  ?slabel .\n"
-               + " OPTIONAL{?o %2$s  ?olabel }.\n"
-               + "OPTIONAL {?p %2$s  ?plabel }.\n"                  
-               + "  \n"
-               + "FILTER(isLiteral(?o))\n"
-               + "%3$s}\n"
                + "FILTER (lang(?plabel) = 'en')\n" 
                + "}",                             
              resource,
@@ -164,11 +153,10 @@ public abstract class AbstractRDFManager implements Closeable{
  
        return String.format(
                
-               "SELECT * WHERE {\n"
+               "SELECT DISTINCT ?p ?plabel ?o ?olabel ?otype WHERE {\n"
                + " {\n"
                + "<%1$s> ?p ?o .\n"
                + "<%1$s>  rdf:type ?stype .\n"
-               + "OPTIONAL {<%1$s>  %2$s  ?slabel }.\n"
                + "OPTIONAL {?p %2$s ?plabel }.\n"
                + "OPTIONAL {?o %2$s ?olabel }.\n"
                + "OPTIONAL {?o rdf:type ?otype} .\n"
@@ -177,7 +165,6 @@ public abstract class AbstractRDFManager implements Closeable{
                + " { \n"
                + "<%1$s> ?p ?o .\n"
                + "<%1$s>  rdf:type ?stype .\n"
-               + "OPTIONAL {<%1$s>  %2$s ?slabel }.\n"
                + "OPTIONAL {?o %2$s ?olabel }.\n"                              
                + "OPTIONAL {?p %2$s ?plabel }.\n"
                + "  \n"
@@ -298,19 +285,7 @@ public abstract class AbstractRDFManager implements Closeable{
                 mapValue.setLabel(value_label);
                 mapValue.setType(value_type);
     
-                if (outgoingLinks.containsKey(mapKey)) {
-    
-                    List<Triple> objects = outgoingLinks.get(mapKey);
-    
-                    objects.add(mapValue);
-    
-                    outgoingLinks.put(mapKey, objects);
-    
-                } else {
-                    List<Triple> objects = new ArrayList<Triple>();
-                    objects.add(mapValue);
-                    outgoingLinks.put(mapKey, objects);
-                }
+                outgoingLinks.computeIfAbsent(mapKey, k -> new ArrayList<Triple>()).add(mapValue);
 
         }
 
@@ -339,22 +314,10 @@ public abstract class AbstractRDFManager implements Closeable{
             String value_uri = result.getBinding("o").getValue().stringValue();
             String value_label = result.getBinding("olabel").getValue().stringValue();
             mapValue.setPairKey(value_uri);
-            mapValue.setPairValue(value_label);           
+            mapValue.setPairValue(value_label);   
             
-            if(outgoingLinks.containsKey(mapKey)) {
+            outgoingLinks.computeIfAbsent(mapKey, k -> new ArrayList<Pair>()).add(mapValue);
 
-             List<Pair> objects = outgoingLinks.get(mapKey);
-
-             objects.add(mapValue);
-
-             outgoingLinks.put(mapKey, objects);
-
-            } 
-            else {
-                List<Pair> objects = new ArrayList<Pair>();
-                objects.add(mapValue);
-                outgoingLinks.put(mapKey, objects);
-            }
         }
 
         return outgoingLinks;
@@ -401,22 +364,7 @@ public abstract class AbstractRDFManager implements Closeable{
             mapValue.setLabel(value_label);
             mapValue.setType(value_type);
             
-            
-           
-             if(outgoingLinks.containsKey(mapKey)) {
-
-                 List<Triple> objects = outgoingLinks.get(mapKey);
-    
-                 objects.add(mapValue);
-    
-                 outgoingLinks.put(mapKey, objects);
-
-             } 
-             else {
-                List<Triple> objects = new ArrayList<Triple>();
-                objects.add(mapValue);
-                outgoingLinks.put(mapKey, objects);
-             }
+            outgoingLinks.computeIfAbsent(mapKey, k -> new ArrayList<Triple>()).add(mapValue);
         }
 
         return outgoingLinks;
