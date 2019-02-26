@@ -26,18 +26,16 @@ import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 
 import org.openrdf.repository.RepositoryException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 
 
 
 /**
+ * @author Wolfgang Walter SAUER (wowasa) &lt;wolfgang.sauer@oeaw.ac.at&gt;
  *
- * @author minadakn
  */
 public abstract class AbstractRDFManager implements Closeable{
-//    private final static Logger _logger = LoggerFactory.getLogger(AbstractRDFManager.class);
     
     public abstract List<BindingSet> query(String sparqlQuery) throws RepositoryException, Exception;
     

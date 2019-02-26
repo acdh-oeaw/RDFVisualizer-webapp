@@ -6,17 +6,14 @@
 package gr.ics.forth.rdfvisualizer.webapp;
 
 
+import gr.ics.forth.rdfvisualizer.api.core.impl.AbstractRDFManager;
 import gr.ics.forth.rdfvisualizer.api.core.impl.BlazegraphManager;
-import gr.ics.forth.rdfvisualizer.api.core.impl.RDFfileManager;
-import gr.ics.forth.rdfvisualizer.api.core.impl.TripleStoreManagerWorking;
+import gr.ics.forth.rdfvisualizer.api.core.impl.VirtuosoManager;
+import gr.ics.forth.rdfvisualizer.api.core.utils.JsonTools;
 import gr.ics.forth.rdfvisualizer.api.core.utils.Triple;
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -32,7 +29,6 @@ import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.repository.RepositoryException;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.slf4j.Logger;
@@ -43,342 +39,51 @@ import org.slf4j.LoggerFactory;
  * @author cpetrakis
  */
 public class GetData extends HttpServlet {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+
     private final static Logger _logger = LoggerFactory.getLogger(GetData.class);
-
     
-    /**
-     * ************************ Create Inverse properties Json File *****************************
-     * @param outgoingLinks
-     * @param subjectLabel
-     * @param subjectType
-     * @param subject
-     * @return
-     * @throws org.openrdf.repository.RepositoryException
-     * @throws org.openrdf.query.MalformedQueryException
-     * @throws org.openrdf.query.QueryEvaluationException
-     */
 
-    public JSONObject createJsonFile(Map<Triple, List<Triple>> outgoingLinks, String subjectLabel, String subjectType, String subject, boolean invert)
-            throws RepositoryException, MalformedQueryException, QueryEvaluationException {
-
-
-        JSONObject subjectlist = new JSONObject();
-        subjectlist.put("type", subjectType);
-        subjectlist.put("label", subjectLabel);
-        subjectlist.put("subject", subject);
-
-        JSONObject result = new JSONObject();
-        JSONArray objects = new JSONArray();
-
-        GetConfigProperties pred_app = new GetConfigProperties();
-        Properties pred_props = pred_app.getConfig("predicates.properties");
-
-        for(Map.Entry<Triple, List<Triple>> entry : outgoingLinks.entrySet()) {
-
-            for (Triple valueTriple : entry.getValue()) {
-
-                JSONObject object = new JSONObject();
-                String propval = pred_props.getProperty((entry.getKey().getLabel()).replaceAll(" ", "_"));
-
-                if ((propval == null) || propval.equals("")) {
-                    object.put("predicate", entry.getKey().getLabel());
-                } 
-                else {
-                    object.put("predicate", pred_props.getProperty((entry.getKey().getLabel()).replaceAll(" ", "_")));
-                }
-                object.put("predicate_uri", entry.getKey().getSubject());
-                object.put("predicate_type", entry.getKey().getType());
-                object.put("label", valueTriple.getLabel());
-                object.put("uri", valueTriple.getSubject());
-                object.put("type", valueTriple.getType());
-                object.put("invert", true);
-                objects.put(object);
-            }
-            result.put("Objects", objects);
-        }
-
-        result.put("Subject", subjectlist);
-        return result;
-    }
-
-    /**
-     * ************************ Merge two Json objects into one *****************************
-     * @param o1
-     * @param o2
-     * @param subjectLabel
-     * @param subjectType
-     * @param subject
-     * @return
-     * @throws org.openrdf.repository.RepositoryException
-     * @throws org.openrdf.query.MalformedQueryException
-     * @throws org.openrdf.query.QueryEvaluationException 
-     */
+    private static String _database;    
+    private static String _url;
+    private static String _user;
+    private static String _password;    
+    private static String _label;
+    private static String _pref_labels ;    
+    private static String _exclude_inverse;        
+    private static List<String> _exclusions;
     
-    public JSONObject mergeJson(JSONObject o1, JSONObject o2, String subjectLabel, String subjectType, String subject)
-            throws RepositoryException, MalformedQueryException, QueryEvaluationException {
-
-        JSONObject result = new JSONObject();
-
-        JSONObject subjectlist = new JSONObject();
-        subjectlist.put("type", subjectType);
-        subjectlist.put("label", subjectLabel);
-        subjectlist.put("subject", subject);
-
-        JSONArray objects1 = new JSONArray();
-        if (o1.has("Objects")) {
-            objects1 = o1.getJSONArray("Objects");
-        }
-
-        JSONArray objects2 = new JSONArray();
-
-        if (o2.has("Objects")) {
-            objects2 = o2.getJSONArray("Objects");
-        }
-
-        JSONArray objs = new JSONArray();
-
-        for (int i = 0; i < objects1.length(); i++) {
-            objs.put(objects1.get(i));
-        }
-        for (int i = 0; i < objects2.length(); i++) {
-            objs.put(objects2.get(i));
-        }
-
-        if (objs.length() > 0) {
-            result.put("Objects", objs);
-        }
-        result.put("Subject", subjectlist);
-
-        return result;
-
-    }
-       
-    /**
-     * ************************** Virtuoso Case ******************************
-     * @param resource
-     * @return
-     * @throws org.openrdf.repository.RepositoryException
-     * @throws org.openrdf.query.MalformedQueryException
-     * @throws org.openrdf.query.QueryEvaluationException
-     */
-    public JSONObject virtuosocase(String resource) throws RepositoryException, MalformedQueryException, QueryEvaluationException {
-
-        GetConfigProperties app = new GetConfigProperties();
-        Properties props = app.getConfig("config.properties");
-
-        String db_url = props.getProperty("db_url").trim();
-        String db_port = props.getProperty("db_port").trim();
-        String db_username = props.getProperty("db_username").trim();
-        String db_password = props.getProperty("db_password").trim();
-        String db_graphname = props.getProperty("db_graphname").trim();        
-        String label = props.getProperty("schema_label").trim();
-        String pref_labels = props.getProperty("pref_labels").trim();
-        
-       
-        String exclude_inverse = props.getProperty("exclude_inverse").trim();        
-        List<String> exclusions = Arrays.asList(exclude_inverse.split("\\s*,\\s*"));
-
-        String subject = resource;
-
-        //TripleStoreManager manager = new TripleStoreManager();
-        TripleStoreManagerWorking manager = new TripleStoreManagerWorking();
-        manager.openConnectionToVirtuoso(db_url, db_port, db_username, db_password);
-
-        subject = subject.replaceAll(" |\\r|\\n|\"", "");
-
-        if (subject.length() > 2000) {
-            subject = subject.substring(0, 500);
-        }
-       
-        String subjectLabel = manager.returnLabel(subject, label);
-        String subjectType = manager.returnType(subject);
-                       
-        String[] pref_lbls = pref_labels.split(",");
-
-        if ((subjectLabel.isEmpty()) && (pref_lbls.length > 0)) {
-            subjectLabel = manager.returnLabel(subject, pref_lbls[0]);
-        }
-
-        Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
-
-        Set<String> labels = new TreeSet<String>();
-
-        labels.add(label);
-        if (pref_lbls[0].length() > 0) {
-            for (int i = 0; i < pref_lbls.length; i++) {                
-                labels.add(pref_lbls[i]);
-            }
-        }
-        
-        outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels, db_graphname);  
-        JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject, false);
-
-      //  Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
-      //  incomingLinks = manager.returnIncomingLinksWithTypes(subject, labels, db_graphname, exclusions);
-      //  JSONObject result0 = createInvertJsonFile(incomingLinks, subjectLabel, subjectType, subject);
-
-        //merge json shows inverse labels otherwise only outgoing links 
-        //return mergeJson(result, result0, subjectLabel, subjectType, subject);//result;
-        return result;
-
-    }
+    static {
+        try {
+            GetConfigProperties app = new GetConfigProperties();
+            Properties props = app.getConfig("config.properties");
     
-    /**
-     * **************************Blazegraph Case ***************************
-     * @param resource
-     *
-     * @return
-     * @throws Exception 
-     * @throws org.openrdf.repository.RepositoryException
-     * @throws org.openrdf.query.MalformedQueryException
-     * @throws org.openrdf.query.QueryEvaluationException
-     */
-    
-    public JSONObject blazegraphcase(String resource) throws Exception{
-       
-
-        String subject = resource;
-
-        GetConfigProperties app = new GetConfigProperties();
-        Properties props = app.getConfig("config.properties");
-
-        String blazegraph_url = props.getProperty("blazegraph_url").trim();
-        String blazegraph_user = props.getProperty("blazegraph_user").trim();
-        String blazegraph_password = props.getProperty("blazegraph_password").trim();
-        
-        String label = props.getProperty("schema_label").trim();
-        String pref_labels = props.getProperty("pref_labels").trim();
-        
-        String exclude_inverse = props.getProperty("exclude_inverse").trim();        
-        List<String> exclusions = Arrays.asList(exclude_inverse.split("\\s*,\\s*"));
-        
-        
- 
-        try(BlazegraphManager manager = new BlazegraphManager(blazegraph_url, blazegraph_user, blazegraph_password)){
-            subject = subject.replaceAll(" |\\r|\\n|\"", "");
-
-            if (subject.length() > 2000) {
-                subject = subject.substring(0, 500);
-            }
-
-            String subjectLabel = manager.returnLabel(subject, label);
-            String subjectType = manager.returnType(subject);
-
-            String[] pref_lbls = pref_labels.split(",");
+            _database = props.getProperty("database").trim();
             
-
-            if ((subjectLabel.isEmpty()) && (pref_lbls.length > 0)) {
-                subjectLabel = manager.returnLabel(subject, pref_lbls[0]);
-            }
+            _url = props.getProperty("triplestore_url").trim();
+            _user = props.getProperty("triplestore_user").trim();
+            _password = props.getProperty("triplestore_password").trim();
             
-/*            if (subjectLabel.isEmpty()) {
-                subjectLabel = "no label";
-            }*/
-                    
-            Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
-            // Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
-
-            Set<String> labels = new TreeSet<String>();
-
-            labels.add(label);
-            if (pref_lbls[0].length() > 0) {
-                for (int i = 0; i < pref_lbls.length; i++) {
-                    labels.add(pref_lbls[i]);
-                }
-            }
-
-            outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels); 
-
-            JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject, false);
+            _label = props.getProperty("schema_label").trim();
+            _pref_labels = props.getProperty("pref_labels").trim();
             
-
-            Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
-            incomingLinks = manager.returnIncomingLinksWithTypes(subject, labels, exclusions);
-            JSONObject result0 = createJsonFile(incomingLinks, subjectLabel, subjectType, subject, true);
-
-            //merge json shows inverse labels otherwise only outgoing links 
-            return mergeJson(result, result0, subjectLabel, subjectType, subject);//result;
-
-            
+            _exclude_inverse = props.getProperty("exclude_inverse").trim();        
+            _exclusions = Arrays.asList(_exclude_inverse.split("\\s*,\\s*"));
         }
-        catch (Exception ex) {
-            throw ex;
+        catch(Exception ex) {
+            _logger.error("couldn't initialize static varaibles", ex);     
         }
-    }
-
-
-    /**
-     * **************************File Case******************************
-     *
-     * @param resource
-     * @param filename
-     * @return
-     * @throws RepositoryException
-     * @throws MalformedQueryException
-     * @throws QueryEvaluationException
-     * @throws Exception
-     */
     
-    public JSONObject filecase(String resource, String filename) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception {
-
-        GetConfigProperties app = new GetConfigProperties();
-        Properties props = app.getConfig("config.properties");
-
-        String defaultfolder = props.getProperty("default_folder").trim();
-        String filepath = props.getProperty("filename").trim();
-        String label = props.getProperty("schema_label").trim();
-        String pref_labels = props.getProperty("pref_labels").trim();
-
-        String subject = resource;
-
-        RDFfileManager manager = new RDFfileManager();
-        File inputFile = new File(filepath);
-
-        if (inputFile.exists()) {
-            manager.readFile(inputFile, "TURTLE");
-        } else {
-            filename = defaultfolder + System.getProperty("file.separator") + filename;
-            inputFile = new File(filename);
-            if (inputFile.exists()) {
-                manager.readFile(inputFile, "TURTLE");
-            }
-        }
-
-        subject = subject.replaceAll(" |\\r|\\n|\"", "");
-
-        if (subject.length() > 2000) {
-            subject = subject.substring(0, 500);
-        }
-
-        String subjectLabel = manager.returnLabel(subject, label);
-        String subjectType = manager.returnType(subject);
-
-        String[] pref_lbls = pref_labels.split(",");
-
-        if ((subjectLabel.isEmpty()) && (pref_lbls.length > 0)) {
-            subjectLabel = manager.returnLabel(subject, pref_lbls[0]);
-        }
-
-        Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
-        // Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
-
-        Set<String> labels = new TreeSet();
-
-        labels.add(label);
-        if (pref_lbls[0].length() > 0) {
-            for (int i = 0; i < pref_lbls.length; i++) {                
-                labels.add(pref_lbls[i]);
-            }
-        } 
-                
-
-        outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels);
-        JSONObject result = createJsonFile(outgoingLinks, subjectLabel, subjectType, subject, false);
-                       
-        return result;
-
+        
     }
 
+    
+
+       
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -398,33 +103,72 @@ public class GetData extends HttpServlet {
 
         response.setContentType("text/html;charset=UTF-8");
 
-        try (PrintWriter out = response.getWriter()) {
+        try (AbstractRDFManager manager = getRDFManager()) {
 
             String resource = request.getParameter("resource");
-            String filename = request.getParameter("folderpath");
+            
+            String subject = resource.replaceAll(" |\\r|\\n|\"", "");
 
-            GetConfigProperties app = new GetConfigProperties();
-            Properties props = app.getConfig("config.properties");
-
-            String database = props.getProperty("database").trim();
-
-            switch (database) {
-                case "virtuoso":
-                    out.println(virtuosocase(resource));
-                    break;
-                case "blazegraph":
-                    out.println(blazegraphcase(resource));
-                    break;
-                case "file":
-                    out.println(filecase(resource, filename));
-                    break;
-                default:
-                    out.println("check_configuration");
-                    break;
+            if (subject.length() > 2000) {
+                subject = subject.substring(0, 500);
             }
 
+            String subjectLabel = manager.returnLabel(subject, _label);
+            String subjectType = manager.returnType(subject);
+
+            String[] pref_lbls = _pref_labels.split(",");
+            
+
+            if ((subjectLabel.isEmpty()) && (pref_lbls.length > 0)) {
+                subjectLabel = manager.returnLabel(subject, pref_lbls[0]);
+            }
+            
+/*            if (subjectLabel.isEmpty()) {
+                subjectLabel = "no label";
+            }*/
+                    
+            Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
+            // Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
+
+            Set<String> labels = new TreeSet<String>();
+
+            labels.add(_label);
+            if (pref_lbls[0].length() > 0) {
+                for (int i = 0; i < pref_lbls.length; i++) {
+                    labels.add(pref_lbls[i]);
+                }
+            }
+
+            outgoingLinks = manager.returnOutgoingLinksWithTypes(subject, labels); 
+
+            JSONObject result = JsonTools.createJsonFile(outgoingLinks, subjectLabel, subjectType, subject, false);
+            
+
+            Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
+            incomingLinks = manager.returnIncomingLinksWithTypes(subject, labels, _exclusions);
+            JSONObject result0 = JsonTools.createJsonFile(incomingLinks, subjectLabel, subjectType, subject, true);
+
+            //merge json shows inverse labels otherwise only outgoing links 
+            response.getWriter().println(JsonTools.mergeJson(result, result0, subjectLabel, subjectType, subject));//result;
+
+        }
+        catch(Exception ex) {
+            _logger.error("", ex);
         }
     }
+    
+    private AbstractRDFManager getRDFManager() throws Exception{
+        switch (_database) {
+        case "virtuoso":
+            return new VirtuosoManager(_url, _user, _password);
+
+        case "blazegraph":
+            return new BlazegraphManager(_url, _user, _password);
+        default:
+            throw new Exception();
+        }
+    }
+
 
     /**
      * Returns a short description of the servlet.
