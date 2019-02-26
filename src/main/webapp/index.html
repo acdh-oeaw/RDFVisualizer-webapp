@@ -3,11 +3,9 @@
     <head>
         <link rel="shortcut icon" href='img/fav.png' type="image/x-icon" />
         <link rel="stylesheet" href="css/page.css">
-
         <meta charset="utf-8">        
         <title>RDF Visualizer</title>
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport"> <!-- Tell the browser to be responsive to screen width -->
-
         <!-- ******************* CSS *****************************-->
         <link rel="stylesheet" href="css/libs/bootstrap/css/bootstrap.min.css">  <!-- Bootstrap 3.3.5 -->
         <link rel="stylesheet" href="css/libs/font-awesome.min.css"> <!-- Font Awesome -->
@@ -20,6 +18,15 @@
     <body class="hold-transition skin-blue sidebar-mini sidebar-collapse">
 
         <div class="wrapper">
+            <header class="main-header" style="height: 45px;">
+
+                <nav class="navbar navbar-static-top">                  
+                    <h3 class='header' style='color:#f7f1f1;'>
+                        Model Overview
+                    </h3>                                                   
+                </nav>                
+            </header>
+            <!-- Left side column. contains the logo and sidebar -->         
             <!-- ***************************   MODALS   **************************************-->  
             <!--    ********************* TEXT *********************  -->
             <div  class="modal fade" id="text_Modal" role="dialog">
@@ -36,9 +43,7 @@
                             <div style="margin-bottom: 10px;" id="text_wraper">                  
                             </div>                
                         </div> 
-                        <div id="expand_list_footer0" class="modal-footer">
-                            <!-- <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
-                            <!-- <button type="button" class="btn btn-primary">Insert selected entries to visualizer</button>-->
+                        <div id="expand_list_footer0" class="modal-footer">                           
                         </div>                      
                     </div>     
                 </div>
@@ -64,9 +69,7 @@
                                 </li>
                             </ul>
                         </div> 
-                        <div id="expand_list_footer" class="modal-footer">
-                            <!-- <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
-                            <!-- <button type="button" class="btn btn-primary">Insert selected entries to visualizer</button>-->
+                        <div id="expand_list_footer" class="modal-footer">                          
                         </div>                      
                     </div>     
                 </div>
@@ -203,66 +206,24 @@
                     <!-- Content Wrapper. Contains page content -->
                     <div class="content-wrapper">
                         <!-- Content Header (Page header) -->
-                        <section class="content-header">
-                            <h1 style="font-size:18px; color: white;">Model Overview<small></small></h1>
-                            <!-- <ol class="breadcrumb">
-                                 <li><i class="fa fa-home"></i> Home</li>
-                             </ol> -->
-                        </section>
-                        <!-- Main content -->
-                        <section class="content">
+                        <!-- Main content -->                       
+                        <section class="content-header" style="margin: 15px 0px 15px 0px">
                             <!-- Small boxes (Stat box) -->                          
                             <!-- Main row -->
                             <div class="row">
                                 <div class="col-xs-12">
                                     <!-- jQuery Knob -->
-                                    <div class="box box-solid">
-                                        <div class="box-header" style="margin:0px 0px -15px 15px;">                                           
-                                            <div><i class="fa fa-crosshairs"></i>
-                                                <!--<img style='margin-top: -2px;' src="img/target.png" alt="" height="14" width="14">-->
-                                                <h3 class="box-title" style="font-size: 14px;">Enter subject</h3></div>
-                                            <div class="box-tools pull-right">
-                                                <button style="visibility:hidden" class="btn btn-default btn-sm" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                                            </div>
-                                        </div><!-- /.box-header -->
+                                    <div class="box box-solid">                                    
                                         <div id="percOverview" class="box-body">
                                             <!-- ****************************************************************************** -->
-                                            <div class='col-xs-12'>             
-                                                <form style=" margin-bottom: 5px;">
-                                                    <input style='width:100%; height:33px; background-color:#EFF6F9 ' type="text" id="resource" name="resource"/>
-                                                    <!--    <input style='margin-bottom: 4px;' class='btn btn-default'  type="button" id="SubmitBtn" value='Submit'/>          -->
-                                                </form>
-                                                <div class="configuration" style='display:none; padding:5px;'>
-                                                
-                                                    <i class="material-icons">&#xe869;</i>
-                                                    <span>Choose a Template: </span>
-                                                    <span  style="margin: 0px 20px 0px 20px;">
-                                                        <select class="selectpicker btn btn-default btn-xs">
-                                                            <option>Template 1</option>
-                                                            <option>Template 2</option>
-                                                            <option>Template 3</option>
-                                                        </select>
-                                                    </span>
-                                                    <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" >
-                                                        <li><a tabindex="-1" href="#">Open Uri in metaphacts</a></li>
-                                                        <li><a tabindex="-1" href="#">Copy Uri</a></li>   
-                                                        <li class="divider"></li> 
-                                                        <li><a tabindex="-1" href="#">Get path of selected item</a></li>   
-                                                    </ul>
-                                                    <span style="display:none; margin-right: 5px ;"><button   id='expand_all' class =' iouiou btn btn-default btn-xs' onclick="Expand_All()">Expand All<i style='padding-left: 10px; ' class="fa fa-expand" aria-hidden="true"></i></button></span>
-                                                    <span style="display:none;"> <button  id='collapse_all' class ='btn btn-default btn-xs' onclick="Collapse_All()">Collapse All<i style='padding-left: 10px' class="fa fa-compress" aria-hidden="true"></i></button></span>
-                                                    <span  style="margin-left: 0px ;"> <button  class =' mark_same btn btn-default btn-xs' >Mark same instances<i style='padding-left: 10px' class="fa fa-flag" aria-hidden="true"></i></button> </span>
-
-                                                    <input style='margin-bottom: 4px; width:18px; height:22px;' class='btn btn-default btn-xs pull-right'  type="button" id="SubmitBtn" value="">
-                                                    <i id="filterefresh" class="fa fa-refresh pull-right"></i>
-                                                    <!--   <input style='margin-bottom: 4px;' class='btn btn-default btn-xs fa fa-refresh'  type="button" id="SubmitBtn"><!-- <i class='fa fa-refresh'></i>  -->
-                                                </div>
-                                                <div id="empty_border"></div>
-                                                <div id="navigator_view" style="padding-top: 10px; display:none;">
-                                                    <div id='new_tab_buttons' style='display:none;'>
-                                                        <button style="margin-bottom:5px;"  class ='btn btn-default btn-xs' onclick="">Back to source path</button>         
-                                                        <span style="margin-left: 10px; font-size: 12px; ">View path of Subject</span>                                       
-                                                    </div> 
+                                            <div class='col-xs-12'>                                                           
+                                                <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; z-index: 9999999999" >
+                                                    <li><a tabindex="-1" href="#">Open Uri in metaphacts</a></li>
+                                                    <li><a tabindex="-1" href="#">Copy Uri</a></li>   
+                                                    <li class="divider"></li> 
+                                                    <li><a tabindex="-1" href="#">Get path of selected item</a></li>   
+                                                </ul>                                  
+                                                <div id="navigator_view" style="padding-top: 5px; display:none;">                                                    
                                                     <ul id="nav" class="dropdown">
                                                         <!--  <li class="dir">  -->
                                                         <ul class="navList dropdown filetree" id="browser" ></ul>
@@ -281,174 +242,10 @@
                 </div>  
             </div>
             <!--*********************  CONFIGURATION *******************************-->
-            <div style="display:none;" id="configuration" class="pt-page" >                              
-                <div class="content-wrapper"> 
-                    <section class="content-header">
-                        <h1 style='font-size:18px; color: white;'>Configuration Page<small></small></h1>                            
-                    </section>
-                    <!-- Main content -->
-                    <section class="content">
-                        <!-- Small boxes (Stat box) -->                          
-                        <!-- Main row -->
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <!-- jQuery Knob -->
-                                <div class="box box-solid">
-                                    <div class="box-header">
-                                        <i class="fa fa-info-circle"></i>
-                                        <h3 class="box-title">Admin Data</h3>
-                                        <div class="box-tools pull-right">
-                                            <button class="btn btn-default btn-sm" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                                        </div>
-                                    </div><!-- /.box-header -->
-                                    <div id="percOverview" class="box-body">
-                                        <!-- <div class="col-xs-12">
-                                            <div class="box box-primary">                           
-                                                <div class="box-body">                                           
-                                                    <div class="row margin">
-                                                        <div class="col-sm-12">                                   
-                                                            <table class="table table-hover showVersions">
-                                                                <tr>
-                                                                    <th>Tree Depth</th>
-                                                                    <th><input type="text" id="tree_depth" value='1'/></th>                                                                                                                                
-                                                                </tr>
-                                                                <tr>
-                                                                    <th>DB Url</th>
-                                                                    <th><input type="text" id="db_url" value='jdbc:virtuoso://localhost'></th>
-                                                                </tr>                                        
-                                                                <tr>
-                                                                    <th>DB Username</th>                                            
-                                                                    <th><input type="text" id="db_username" value='dba'/></th>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th>DB Password</th>                                           
-                                                                    <th><input type="password" id="db_pswr" value='dba'/></th>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th>DB Port</th>                                            
-                                                                    <th><input type="text" id="db_port" value='1111'/></th>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th>File Path</th>    
-                                                                    <th><input type="text" id="filepath" value='test'/></th>       
-                                                                </tr>                                        
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="box-footer clearfix">
-                                                    <button onclick="admin_Configuration()" id="config_submit" class="pull-right btn btn-default">
-                                                        Submit
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>  -->
-                                    </div><!-- /.box -->
-                                </div><!-- /.col -->
-                                <!-- ********************************** LABEL Predicates ************** --> 
-                                <div class="box box-solid">
-                                    <div class="box-header">
-                                        <i class="fa fa-info-circle"></i>
-                                        <h3 class="box-title">Predicate Labels</h3>
-                                        <div class="box-tools pull-right">
-                                            <button class="btn btn-default btn-sm" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                                        </div>
-                                    </div><!-- /.box-header -->
-                                    <div id="percOverview" class="box-body">
-                                        <div class="col-xs-12">
-                                            <div class="box box-primary">                           
-                                                <div class="box-body">                                           
-                                                    <div class="row margin">
-                                                        <div class="col-sm-12"> 
-                                                            <table id="table_of_preds" class="table table-hover showVersions">                                        
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>                 
-                                                <div class="box-footer clearfix">
-                                                    <button onclick="Config_predicates()" id="get_config_predicates" class="pull-left btn btn-default">Get predicates</button>
-                                                    <button onclick="Submit_config_preds()" id="config_submit" class="pull-right btn btn-default">Submit</button>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                    </div><!-- /.box -->
-                                </div><!-- /.col -->
-                                <!--    *****************************************************************    -->
-                                <div class="box box-solid">
-                                    <div class="box-header">
-                                        <i class="fa fa-info-circle"></i>
-                                        <h3 class="box-title">Predicate Priority</h3>
-                                        <div class="box-tools pull-right">
-                                            <button class="btn btn-default btn-sm" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                                        </div>
-                                    </div><!-- /.box-header -->
-                                    <div id="percOverview" class="box-body">
-                                        <div class="col-xs-12">
-                                            <div class="box box-primary">                           
-                                                <div class="box-body">                                           
-                                                    <div class="row margin">
-                                                        <div class="col-sm-12">                                                                       
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="box-footer clearfix">                      
-                                                    <button  onclick="window.open('DownloadFileServlet')" class="pull-left btn btn-default">Download file</button>                            
-                                                    <!--    <button onclick="" id="config_submit" class="pull-right btn btn-default">Submit</button> -->
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div><!-- /.box -->
-                                </div><!-- /.col -->
-                                <!-- *************************************************************** -->
-                                <div class="box box-solid">
-                                    <div class="box-header">
-                                        <i class="fa fa-info-circle"></i>
-                                        <h3 class="box-title">Table of Templates</h3>
-                                        <div class="box-tools pull-right">
-                                            <button class="btn btn-default btn-sm" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                                        </div>
-                                    </div><!-- /.box-header -->
-                                    <div id="percOverview" class="box-body">
-                                        <div class="col-xs-12">
-                                            <div class="box box-primary">                           
-                                                <div class="box-body">                                           
-                                                    <div class="row margin">
-                                                        <div class="col-sm-12"> 
-                                                            <table id="table_of_preds" class="table table-hover showVersions">
-                                                                <tr>
-                                                                    <th>#</th>                                            
-                                                                    <th>Template Name</th>
-                                                                    <th>Author</th>         
-                                                                    <th>Related Ontology</th>
-                                                                    <th>Related Database</th>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th>#</th>                                            
-                                                                    <th>Template Name</th>
-                                                                    <th>Author</th>         
-                                                                    <th>Related Ontology</th>
-                                                                    <th>Related Database</th>
-                                                                </tr>
-                                                                <tr>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>                 
-                                                <div class="box-footer clearfix">                   
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div><!-- /.box -->
-                                </div><!-- /.col -->
-                                <!--    *****************************************************************    -->
-                            </div>
-                        </div>
-                        <div class="row">                               
-                        </div>
-                    </section>            
-                </div>  
-            </div>          
+            <!--  <footer  style=" border-top:none; color:#ffffff; background-color: #222d32;" class="main-footer">               
+                    <strong>System version 1.1-SNAPSHOT <a target="_blank" style="color:#ffffff" href="changes.html">(2018-07-04T115:40)</a></strong>
+                </footer>           -->
         </div><!-- ./wrapper -->
         <!-- TEMPLATE JAVASCRIPT LIBRARIES -->
         <script src="plugins/jQuery/jQuery-2.1.4.min.js"></script> <!-- jQuery 2.1.4 -->
