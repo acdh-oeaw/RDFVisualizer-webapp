@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package gr.ics.forth.rdfvisualizer.api.core.impl;
 
 import gr.ics.forth.rdfvisualizer.api.core.utils.Pair;
@@ -26,9 +21,6 @@ import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 
 import org.openrdf.repository.RepositoryException;
-
-
-
 
 
 /**
@@ -369,31 +361,28 @@ public abstract class AbstractRDFManager implements Closeable{
         
     }
     
-     public List<String> returnSubjects(String namedGraph) throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception{
+    public List<String> returnSubjects(String namedGraph)
+            throws RepositoryException, MalformedQueryException, QueryEvaluationException, Exception {
 
         List<String> subjects = new ArrayList<>();
-        
-                List<String> namedgraphs = new ArrayList<>();
+
+        List<String> namedgraphs = new ArrayList<>();
         namedgraphs.add(namedGraph);
-        
+
         String query = selectAll(namedgraphs);
-      
+
         List<BindingSet> sparqlResults = query(query);
-       
+
         for (BindingSet result : sparqlResults) {
-           
+
             String value = result.getBinding("s").getValue().stringValue();
-            
+
             subjects.add(value);
         }
 
         return subjects;
-        
+
     }
-     
-
-
-
 
     @Override
     public abstract void close() throws IOException;

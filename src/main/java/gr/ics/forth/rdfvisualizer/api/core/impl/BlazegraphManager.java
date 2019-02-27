@@ -27,19 +27,14 @@ import org.slf4j.LoggerFactory;
 
 
 /**
+ * @author Wolfgang Walter SAUER (wowasa) &lt;wolfgang.sauer@oeaw.ac.at&gt;
  *
- * @author minadakn
  */
 public class BlazegraphManager extends AbstractRDFManager{
     private final static Logger _logger = LoggerFactory.getLogger(BlazegraphManager.class);
     
     private static HttpClient _httpClient;
     
-
-    
-
-    
-//    private RemoteRepository repo
     private final RemoteRepositoryManager rpm;
     
     
@@ -47,9 +42,7 @@ public class BlazegraphManager extends AbstractRDFManager{
          
         this.rpm = new RemoteRepositoryManager(sparqlEndPoint);
 
-    }
-    
-    
+    } 
     
     public BlazegraphManager(String sparqlEndPoint, HttpClient httpClient, ExecutorService executor) throws RepositoryException, Exception{
          
@@ -91,7 +84,7 @@ public class BlazegraphManager extends AbstractRDFManager{
 
     }
     
-    public synchronized List<BindingSet> query(String sparqlQuery) throws RepositoryException, Exception {
+    public List<BindingSet> query(String sparqlQuery) throws RepositoryException, Exception {
 
         List<BindingSet> retList = new ArrayList<>();
 

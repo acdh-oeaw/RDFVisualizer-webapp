@@ -7,7 +7,6 @@ RDF Visualizer is a tool for displaying and browsing high density of RDF data. T
 RDF Visualizer supports browsing content from:
 1. [Virtuoso](https://virtuoso.openlinksw.com) database.
 2. [Blazegraph](https://www.blazegraph.com) database. 
-3. Simple file (has been tested with .ttl files).
 
 Further information about the tool functionalities can be found [here.](http://www.cidoc-crm.org/sites/default/files2/RDF%20visualiser.pdf)
 
@@ -51,9 +50,8 @@ User can define this source location by editing the ‘database’ property valu
 
 ```properties
 
-# database value can be 'file' 'virtuoso' or 'blazegraph'
+# database value can be 'virtuoso' or 'blazegraph'
 
-# 'file' reads direct from file
 # 'virtuoso' reads from a virtuoso endpoint
 # 'blazegraph' reads from a blazegraph endpoint
 
@@ -61,60 +59,20 @@ database = virtuoso
 
 ```
 
-#### Virtuoso Case ####
+#### Database parameters ####
 
-If property ‘database’ has value ‘virtuoso’ then the following values must be filled as below:
-
-```properties
-
-############################ VIRTUOSO ################################## 
-
-# in case of 'virtuoso' insert values, else leave them blank
-db_username = virtuoso username [default = dba ]
-db_password = virtuoso password [default = dba ]
-db_port = virtuoso port     [default = 1111]
-db_url = virtuoso url [default= jdbc\:virtuoso\://localhost]
-db_graphname = graphname [e.g. http://localhost:8890/GRAPH_NAME]
-
-```
-
-#### Blazegraph Case ####
-
-If property ‘database’ has value ‘blazegraph’ then following values must be filled as below
+No matter if the ‘database’ has value ‘virtuoso’ or 'blazegraph', the following values must be filled as below:
 
 ```properties
 
-############################ BLAZEGRAPH ################################
-# in case of 'blazegraph' insert values else leave blank
+################### Triplestore credentials #####################################
 
-blazegraph_url = blazegraph url [e.g. http://localhost:9999/blazegraph]
-
-```
-
-#### File Case ####
-
-If property ‘database’ has value ‘file’ then following values must be filled as below:
-
-```properties
-
-############################### FILE #################################### 
-
-# in case of 'file' insert values, else leave blank
-# If we know the path of the file we want to visualize then we fill it as # filename property value
-# e.g C:\\Users\\cpetrakis\\Desktop\\bb\\b.ttl
-# WARNING: if we want dynamically give the filename as parameter to the
-# RDF Visualizer from another system we leave the property value blank !
-
-filename =
-
-# default_folder value defines the path of default server folder in which
-# the rdf files are saved.
-# If the database property value is ‘file’ we must fill this property value 
-# in order the RDF Visualizer to find and visualize the files.
-
-default_folder = [e.g. C:\\Users\\User\\Desktop\\My_Folder]
+triplestore_url=url[:port]
+triplestore_user=username
+triplestore_password=password
 
 ```
+
 
 #### Other Visualization Configuration ####
 
@@ -255,7 +213,7 @@ Further documentation about the tool functionalities you can find [here](http://
 
 ### 5. Contact ### 
 
-Petrakis Kostas < cpetrakis@ics.forth.gr >
+WolfgangWalter Sauer < wolfgang.sauer@oeaw.ac.at >
 
 
 

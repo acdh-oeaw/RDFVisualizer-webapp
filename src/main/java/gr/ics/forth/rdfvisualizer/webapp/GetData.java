@@ -97,13 +97,13 @@ public class GetData extends HttpServlet {
      * @throws org.openrdf.query.QueryEvaluationException
      */
     
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, RepositoryException, MalformedQueryException, QueryEvaluationException, Exception {
+    @Override
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         
 
         response.setContentType("text/html;charset=UTF-8");
 
-        try (AbstractRDFManager manager = getRDFManager()) {
+        try (AbstractRDFManager manager = _database.equals("blazegraph")?new BlazegraphManager(_url, _user, _password):new VirtuosoManager(_url, _user, _password)) {
 
             String resource = request.getParameter("resource");
             
@@ -122,13 +122,8 @@ public class GetData extends HttpServlet {
             if ((subjectLabel.isEmpty()) && (pref_lbls.length > 0)) {
                 subjectLabel = manager.returnLabel(subject, pref_lbls[0]);
             }
-            
-/*            if (subjectLabel.isEmpty()) {
-                subjectLabel = "no label";
-            }*/
                     
             Map<Triple, List<Triple>> outgoingLinks = new HashMap<Triple, List<Triple>>();
-            // Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
 
             Set<String> labels = new TreeSet<String>();
 
@@ -143,7 +138,6 @@ public class GetData extends HttpServlet {
 
             JSONObject result = JsonTools.createJsonFile(outgoingLinks, subjectLabel, subjectType, subject, false);
             
-
             Map<Triple, List<Triple>> incomingLinks = new HashMap<Triple, List<Triple>>();
             incomingLinks = manager.returnIncomingLinksWithTypes(subject, labels, _exclusions);
             JSONObject result0 = JsonTools.createJsonFile(incomingLinks, subjectLabel, subjectType, subject, true);
@@ -152,23 +146,20 @@ public class GetData extends HttpServlet {
             response.getWriter().println(JsonTools.mergeJson(result, result0, subjectLabel, subjectType, subject));//result;
 
         }
-        catch(Exception ex) {
-            _logger.error("", ex);
+        catch (RepositoryException ex) {
+            _logger.error("repository exception - please verify your connection string", ex);
+        }
+        catch (MalformedQueryException ex) {
+            _logger.error("malformed querry", ex);
+        }
+        catch (QueryEvaluationException ex) {
+            _logger.error("query evaluation exception", ex);
+        }
+        catch (Exception ex) {
+            _logger.error("general exception", ex);
         }
     }
     
-    private AbstractRDFManager getRDFManager() throws Exception{
-        switch (_database) {
-        case "virtuoso":
-            return new VirtuosoManager(_url, _user, _password);
-
-        case "blazegraph":
-            return new BlazegraphManager(_url, _user, _password);
-        default:
-            throw new Exception();
-        }
-    }
-
 
     /**
      * Returns a short description of the servlet.
@@ -177,21 +168,6 @@ public class GetData extends HttpServlet {
      */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
-    @Override
-    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            processRequest(request, response);
-        } catch (RepositoryException ex) {
-            _logger.error("", ex);
-        } catch (MalformedQueryException ex) {
-            _logger.error("", ex);
-        } catch (QueryEvaluationException ex) {
-            _logger.error("", ex);
-        } catch (Exception ex) {
-            _logger.error("", ex);
-        }
+        return "RDFVisualizer";
     }
 }
