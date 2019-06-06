@@ -1437,7 +1437,8 @@ function highlight(uri) {
                     .css({
                         position: "absolute",
                         left: getMenuPosition(e.clientX, 'width', 'scrollLeft')-60,
-                        top: getMenuPosition(e.clientY, 'height', 'scrollTop')-180
+//                        top: getMenuPosition(e.clientY, 'height', 'scrollTop')-180
+                        top: getMenuPosition(e.clientY, 'height', 'scrollTop')
                     })
                     .off('click')
                     .on('click', 'a', function (e) {
